@@ -42,10 +42,49 @@ const CARD = {
 };
 ```
 
-**Photos:** see [`assets/PUT-PHOTOS-HERE.txt`](assets/PUT-PHOTOS-HERE.txt).
-Short version — main portrait at `assets/photo.jpg`, gallery shots at
+**Photos:** main portrait at `assets/photo.jpg`, gallery shots at
 `assets/memory-1.jpg` and up. Missing files degrade gracefully: the portrait
 falls back to her initial, and the gallery hides itself entirely.
+
+## Swapping the photos
+
+Don't crop by hand — `tools/prepare-photos.py` does it, including stripping the
+Instagram app furniture out of a screenshot.
+
+```bash
+# drop originals in tools/inbox/, then
+bash tools/rebuild-photos.sh
+```
+
+It reads `tools/inbox/` in filename order, writes `assets/photo.jpg` from the
+first file (or `--main NAME`) and `assets/memory-N.jpg` from the rest.
+
+For a screenshot it locates the photo by scanning for the run of rows that
+*aren't* Instagram's flat dark background — chrome rows measure a dead-flat
+stddev of 0, a real photo never does, even a night shot — then trims the right
+edge where iOS parks its scroll indicator.
+
+Useful flags, all per-file:
+
+| Flag | What it does |
+| --- | --- |
+| `--main NAME` | which file becomes the round portrait |
+| `--zoom NAME=0.8` | tighten the square crop (1.0 = widest that fits) |
+| `--focus NAME=0.0` | where the crop sits vertically; 0 keeps the very top |
+| `--focus-x NAME=0.7` | where it sits horizontally; 0.5 is centred |
+| `--rotate NAME=90` | for photos shot sideways; positive is anticlockwise |
+| `--erase-badge NAME` | paints out Instagram's `1/2` carousel pill |
+| `--no-crop NAME` | treat a tall image as a normal photo |
+| `--debug` | writes `*_debug.png` showing the detected crop |
+
+`--erase-badge` is deliberately opt-in rather than automatic. The pill is drawn
+*onto* the photo so no rectangular crop removes it, but auto-detecting it is a
+bad trade — a corner full of shelves and vases looks a lot like a pill to a
+heuristic, and a wrong guess quietly smears a photo nobody thinks to re-check.
+
+`tools/rebuild-photos.sh` records the settings the current photos needed, with a
+note on why each one is there. Originals in `tools/inbox/` are gitignored, so
+nothing unpublished rides along to GitHub.
 
 **Bonus:** the name can be overridden in the URL — `?to=Sophie` — so one deploy
 works for more than one person.
