@@ -45,6 +45,11 @@
 *,*::before,*::after{ box-sizing:border-box; }
 html,body{ height:100%; }
 
+/* Any rule here that sets `display` outranks the browser's own
+   [hidden]{display:none}, so hiding an element in JS would silently do
+   nothing. Restate it with weight so `hidden` always wins. */
+[hidden]{ display:none !important; }
+
 body{
   margin:0;
   font-family:var(--body);
@@ -133,6 +138,7 @@ body::before{
   border:1px solid var(--card-line);
   background:var(--card);
   color:var(--ink);
+  -webkit-backdrop-filter:blur(10px);
   backdrop-filter:blur(10px);
   transition:transform .18s ease, background .18s ease, box-shadow .18s ease, opacity .18s ease;
   -webkit-tap-highlight-color:transparent;
@@ -513,6 +519,7 @@ body::before{
   border-radius:999px;
   background:var(--card);
   border:1px solid var(--card-line);
+  -webkit-backdrop-filter:blur(8px);
   backdrop-filter:blur(8px);
   font-family:var(--display);
   font-weight:700;
@@ -552,24 +559,38 @@ body::before{
 .photo-frame.no-photo img{ display:none; }
 .photo-frame.no-photo .photo-fallback{ display:grid; }
 
+/* A party hat perched on the top of the frame. It's one box holding a cone
+   and a pom-pom, rotated about its base, so the whole thing tilts together
+   and the base stays planted on her head. */
 .hat{
   position:absolute;
-  top:-13%; left:50%;
-  transform:translateX(-58%) rotate(-19deg);
-  width:0; height:0;
-  border-left:30px solid transparent;
-  border-right:30px solid transparent;
-  border-bottom:62px solid var(--pink);
-  filter:drop-shadow(0 4px 8px rgba(0,0,0,.35));
+  left:50%; top:-16%;
+  width:clamp(48px,14vw,64px);
+  height:clamp(56px,16vw,74px);
+  transform:translateX(-62%) rotate(-17deg);
+  transform-origin:50% 100%;
+  pointer-events:none;
+  z-index:2;
+  filter:drop-shadow(0 5px 9px rgba(0,0,0,.4));
 }
-.hat::after{
+.hat::before{                       /* the cone, with candy stripes */
+  content:"";
+  position:absolute; inset:0;
+  clip-path:polygon(50% 0, 100% 100%, 0 100%);
+  background:
+    repeating-linear-gradient(74deg,
+      rgba(255,255,255,.34) 0 7px, transparent 7px 15px),
+    linear-gradient(150deg, var(--pink), #d1447a);
+}
+.hat::after{                        /* the pom-pom, sat on the tip */
   content:"";
   position:absolute;
-  left:-13px; top:-79px;
-  width:16px; height:16px;
+  left:50%; top:-11%;
+  width:34%; aspect-ratio:1;
+  transform:translate(-50%,-38%);
   border-radius:50%;
-  background:var(--gold);
-  box-shadow:0 0 12px rgba(255,201,77,.7);
+  background:radial-gradient(circle at 34% 30%, #ffe9a8, var(--gold) 62%, #dda32c);
+  box-shadow:0 0 13px rgba(255,201,77,.75);
 }
 
 .caption{
@@ -585,6 +606,7 @@ body::before{
   border-radius:22px;
   background:var(--card);
   border:1px solid var(--card-line);
+  -webkit-backdrop-filter:blur(14px);
   backdrop-filter:blur(14px);
   box-shadow:0 22px 60px rgba(0,0,0,.34);
   text-align:left;
@@ -646,12 +668,13 @@ body::before{
   cursor:zoom-in;
   border:0;
   position:relative;
+  /* Tilt comes from a custom property, set per polaroid in JS. It can't be
+     nth-child: each one is wrapped in its own slot to hold the configured
+     order while the images resolve, so they're all only-children. */
+  transform:rotate(var(--tilt,0deg));
   transition:transform .28s cubic-bezier(.2,.9,.3,1), box-shadow .28s ease;
   -webkit-tap-highlight-color:transparent;
 }
-.polaroid:nth-child(odd) { transform:rotate(-2.6deg); }
-.polaroid:nth-child(even){ transform:rotate(2.2deg); }
-.polaroid:nth-child(3n)  { transform:rotate(1.2deg); }
 .polaroid:hover, .polaroid:focus-visible{
   transform:rotate(0) translateY(-10px) scale(1.05);
   box-shadow:0 22px 44px rgba(0,0,0,.5);
@@ -695,6 +718,7 @@ body::before{
   place-items:center;
   padding:24px;
   background:rgba(12,4,16,.9);
+  -webkit-backdrop-filter:blur(10px);
   backdrop-filter:blur(10px);
   cursor:zoom-out;
 }
@@ -751,10 +775,19 @@ body::before{
   max-width:min(90vw,420px);
   text-align:center;
   box-shadow:0 18px 40px rgba(0,0,0,.5);
-  transition:transform .38s cubic-bezier(.2,.9,.3,1);
+  /* Empty, this box is short, so shifting it by its own height doesn't clear
+     the viewport — it leaves a sliver stuck to the bottom edge. Hide it
+     outright and let the transform handle only the motion. */
+  opacity:0;
+  visibility:hidden;
+  transition:transform .38s cubic-bezier(.2,.9,.3,1), opacity .3s ease, visibility .38s;
   text-wrap:balance;
 }
-.toast.show{ transform:translate(-50%,0); }
+.toast.show{
+  transform:translate(-50%,0);
+  opacity:1;
+  visibility:visible;
+}
 
 @media (prefers-reduced-motion: reduce){
   *,*::before,*::after{
@@ -1417,38 +1450,56 @@ micBtn.addEventListener("click", enableMic);
 const galleryWrap = $("galleryWrap");
 const galleryEl = $("gallery");
 
+const TILTS = ["-2.6deg", "2.2deg", "1.2deg", "-1.8deg", "3deg"];
+
 function buildGallery(){
   const shots = (CARD.gallery || []).filter(g => g && g.src);
   if (!shots.length) return;
 
   $("galleryTitle").textContent = CARD.galleryTitle || "";
 
+  // Slots keep the configured order even though the images resolve out of it.
+  const slots = shots.map(() => {
+    const slot = document.createElement("span");
+    slot.style.display = "contents";
+    galleryEl.appendChild(slot);
+    return slot;
+  });
+
   shots.forEach((shot, i) => {
-    const fig = document.createElement("button");
-    fig.className = "polaroid";
-    fig.type = "button";
-    fig.hidden = true;                 // stays hidden until the image proves it exists
-    fig.setAttribute("aria-label", shot.caption || `Photo ${i + 1}`);
+    // Probe with a detached image. It must not be `loading="lazy"` and must
+    // not live inside the hidden gallery while it loads: a lazy image in a
+    // display:none subtree never intersects the viewport, so the browser
+    // never fetches it, so it never reports back — and the polaroid waiting
+    // on it would stay hidden forever.
+    const probe = new Image();
+    probe.decoding = "async";
 
-    const img = document.createElement("img");
-    img.loading = "lazy";
-    img.decoding = "async";
-    img.alt = shot.caption || "";
+    probe.addEventListener("load", () => {
+      const fig = document.createElement("button");
+      fig.className = "polaroid";
+      fig.type = "button";
+      fig.style.setProperty("--tilt", TILTS[i % TILTS.length]);
+      fig.setAttribute("aria-label", shot.caption || `Photo ${i + 1}`);
 
-    img.addEventListener("load", () => {
-      fig.hidden = false;
+      const img = document.createElement("img");
+      img.src = shot.src;                    // already cached by the probe
+      img.alt = shot.caption || "";
+
+      const cap = document.createElement("span");
+      cap.className = "cap";
+      cap.textContent = shot.caption || "";
+
+      fig.append(img, cap);
+      fig.addEventListener("click", () => openLightbox(shot.src, shot.caption || ""));
+
+      slots[i].appendChild(fig);
       galleryWrap.hidden = false;
     });
-    img.addEventListener("error", () => fig.remove());
-    img.src = shot.src;
 
-    const cap = document.createElement("span");
-    cap.className = "cap";
-    cap.textContent = shot.caption || "";
-
-    fig.append(img, cap);
-    fig.addEventListener("click", () => openLightbox(img.src, shot.caption || ""));
-    galleryEl.appendChild(fig);
+    // A missing file just leaves its slot empty.
+    probe.addEventListener("error", () => slots[i].remove());
+    probe.src = shot.src;
   });
 }
 buildGallery();
