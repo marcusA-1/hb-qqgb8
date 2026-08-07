@@ -89,6 +89,46 @@ nothing unpublished rides along to GitHub.
 **Bonus:** the name can be overridden in the URL — `?to=Sophie` — so one deploy
 works for more than one person.
 
+## Her song
+
+The card embeds **Runaway — Kanye West** from Apple Music. Swap it by editing
+the `song` block:
+
+```js
+song: {
+  title: "Runaway",
+  artist: "Kanye West",
+  provider: "apple",                 // "apple" or "spotify"
+  appleMusic: { album: "1445865909", track: "1445866473", country: "gb" },
+  spotify: "3DK6m7It6Pw857FcQftMds",
+  file: "",
+  tease: true
+}
+```
+
+To find the ids, open the song on the web and read the URL:
+
+- Apple Music — `music.apple.com/gb/album/<album>?i=<track>`
+- Spotify — `open.spotify.com/track/<id>`
+
+**Why an embed and not an MP3.** "Runaway" is a commercial recording. Putting a
+copy of it in `assets/` and pushing it to GitHub Pages is publishing it, which
+isn't yours to do. The official embed costs nothing, needs no hosting, streams
+from the label's own servers, and counts as a play for the artist.
+
+**What she'll actually hear.** Signed in to Apple Music in that browser, the
+full track. Otherwise a preview of roughly 30–90 seconds. Either way she gets
+the artwork, the title, and a tap-through to the full song. No browser will
+autoplay it — she taps play, which is also why the card doesn't try to.
+
+`file:` is there if you have a track you *do* have the rights to (something you
+made or bought a licence for). Point it at a file in `assets/` and it plays
+inline on loop through the 🔊 toggle, and the embed is skipped.
+
+`tease: true` plays a single soft piano note, repeating, over the candle scene —
+a nod to the song's intro before the real thing starts. One pitch, nothing more.
+Set it to `false` for silence.
+
 ## Preview it locally
 
 Double-click `index.html` and most of it works. Two things need a real server:
@@ -135,9 +175,8 @@ https://<your-username>.github.io/<repo-name>/
 - Respects `prefers-reduced-motion` throughout.
 - Keyboard accessible: `Space` blows out the next candle, `Esc` closes a photo.
 - Phone haptics on each candle, each firework, and the unwrapping.
-- The melody and sound effects are generated with WebAudio, so there's no audio
-  file to host. *Happy Birthday to You* has been public domain in the US
-  since 2016.
+- Sound effects (candle puff, firework pops, the piano tease) are generated
+  with WebAudio, so there's no audio file to host.
 - **The microphone is never recorded or sent anywhere.** The audio stream is
   connected to an analyser and nothing else — not even the speakers — and the
   track is stopped the moment the last candle goes out.

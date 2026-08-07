@@ -635,6 +635,48 @@ body::before{
 }
 
 /* ============================================================
+   NOW PLAYING
+   ============================================================ */
+.now-playing{
+  width:100%;
+  max-width:560px;
+  padding:clamp(16px,4vw,22px);
+  border-radius:22px;
+  background:var(--card);
+  border:1px solid var(--card-line);
+  -webkit-backdrop-filter:blur(14px);
+  backdrop-filter:blur(14px);
+  box-shadow:0 22px 60px rgba(0,0,0,.34);
+}
+.np-label{
+  margin:0 0 12px;
+  font-family:var(--display);
+  font-weight:700;
+  font-size:clamp(.95rem,3.2vw,1.1rem);
+  color:var(--ink-soft);
+  letter-spacing:.01em;
+}
+.now-playing iframe{
+  display:block;
+  width:100%;
+  border:0;
+  border-radius:14px;
+  overflow:hidden;
+  /* Both widgets are opaque, so give them something to sit on while they
+     load rather than flashing a white rectangle on a dark page. */
+  background:#181818;
+}
+.np-fallback{
+  display:block;
+  margin-top:12px;
+  font-size:.82rem;
+  color:var(--ink-mute);
+  text-decoration:none;
+  transition:color .18s ease;
+}
+.np-fallback:hover{ color:var(--gold); text-decoration:underline; }
+
+/* ============================================================
    MEMORY GALLERY — polaroids
    ============================================================ */
 .gallery-wrap{ width:100%; }
@@ -804,7 +846,7 @@ body::before{
 
 <canvas id="confetti" aria-hidden="true"></canvas>
 
-<button class="btn sound" id="soundBtn" type="button" aria-pressed="false" title="Play music">🔈</button>
+<button class="btn sound" id="soundBtn" type="button" aria-pressed="false" title="Sound on">🔈</button>
 
 <main class="wrap">
 
@@ -877,7 +919,9 @@ body::before{
       <p class="signature" id="signOut"></p>
     </div>
 
-    <div class="gallery-wrap reveal" id="galleryWrap" style="animation-delay:.62s" hidden>
+    <div class="now-playing reveal" id="nowPlaying" style="animation-delay:.58s" hidden></div>
+
+    <div class="gallery-wrap reveal" id="galleryWrap" style="animation-delay:.7s" hidden>
       <h2 class="gallery-title" id="galleryTitle"></h2>
       <div class="gallery" id="gallery"></div>
     </div>
@@ -947,9 +991,31 @@ const CARD = {
   // Tiny line at the very bottom. "" hides it.
   footer: "made just for you 💛",
 
-  // Play a little Happy Birthday melody? (Starts muted either way —
-  // browsers require a tap before any sound.)
-  music: true
+  // ── HER SONG ────────────────────────────────────────────────
+  song: {
+    title: "Runaway",
+    artist: "Kanye West",
+    label: "her song 🎧",
+
+    // Which player to embed: "apple" or "spotify". Both are official
+    // embeds — nothing to host, nothing to infringe, artwork included, and
+    // the artist gets paid. She taps play; no browser autoplays a song.
+    provider: "apple",
+
+    // From a music.apple.com link: .../album/<album>?i=<track>
+    appleMusic: { album: "1445865909", track: "1445866473", country: "gb" },
+
+    // From a Spotify track link, the last path segment.
+    spotify: "3DK6m7It6Pw857FcQftMds",
+
+    // Prefer your own audio file? Put it in assets/, name it here, and it
+    // plays inline on loop through the 🔊 toggle instead of the embed.
+    // Only publish a file you have the rights to — see the README.
+    file: "",
+
+    // Sparse single piano note over the candle scene, before the song.
+    tease: true
+  }
 };
 /* ══════════════════════════════════════════════════════════════
    Below here is the machinery. You shouldn't need to touch it.
@@ -1171,7 +1237,7 @@ function tick(){
    SOUND — generated with WebAudio, so there's no file to host.
    ══════════════════════════════════════════════════════════════ */
 let audioCtx = null;
-let musicOn = false;
+let soundOn = false;
 const soundBtn = $("soundBtn");
 
 function ac(){
@@ -1180,38 +1246,49 @@ function ac(){
   return audioCtx;
 }
 
-// Happy Birthday to You (public domain). [semitones from A4, beats]
-const MELODY = [
-  [-4,.75],[-4,.25],[-2,1],[-4,1],[ 1,1],[ 0,2],
-  [-4,.75],[-4,.25],[-2,1],[-4,1],[ 3,1],[ 1,2],
-  [-4,.75],[-4,.25],[ 8,1],[ 5,1],[ 1,1],[ 0,1],[-2,2],
-  [ 6,.75],[ 6,.25],[ 5,1],[ 1,1],[ 3,1],[ 1,2]
-];
-
-function note(c, semi, startAt, beats){
-  const dur = beats * 0.42;
-  const osc  = c.createOscillator();
+/* A single piano note, struck softly and left to ring. Used for the sparse
+   tease over the candle scene — one repeated pitch, nothing more. */
+function pianoNote(c, semi, startAt, dur = 2.6){
+  const freq = 440 * Math.pow(2, semi / 12);
   const gain = c.createGain();
-  osc.type = "triangle";
-  osc.frequency.value = 440 * Math.pow(2, semi / 12);
   gain.gain.setValueAtTime(0.0001, startAt);
-  gain.gain.exponentialRampToValueAtTime(0.13, startAt + 0.02);
-  gain.gain.exponentialRampToValueAtTime(0.0001, startAt + dur * 0.92);
-  osc.connect(gain).connect(c.destination);
-  osc.start(startAt);
-  osc.stop(startAt + dur);
-  return dur;
+  gain.gain.exponentialRampToValueAtTime(0.16, startAt + 0.008);   // hammer
+  gain.gain.exponentialRampToValueAtTime(0.0001, startAt + dur);   // long decay
+
+  // A couple of quiet partials give it body without sounding like a beep.
+  [[1, 1], [2, 0.28], [3, 0.1]].forEach(([mult, level]) => {
+    const osc = c.createOscillator();
+    const g = c.createGain();
+    osc.type = "triangle";
+    osc.frequency.value = freq * mult;
+    g.gain.value = level;
+    osc.connect(g).connect(gain);
+    osc.start(startAt);
+    osc.stop(startAt + dur + 0.1);
+  });
+
+  gain.connect(c.destination);
 }
 
-function playMelody(){
-  const c = ac();
-  let t = c.currentTime + 0.15;
-  for (const [semi, beats] of MELODY) t += note(c, semi, t, beats);
+/* The tease: one note, repeating, while the candles are still lit. */
+let teaseTimer = null;
+function startTease(){
+  if (!CARD.song?.tease || !soundOn || teaseTimer) return;
+  const strike = () => {
+    if (!soundOn || scene1.hidden) return stopTease();
+    pianoNote(ac(), 7);            // E5
+  };
+  strike();
+  teaseTimer = setInterval(strike, 2000);
+}
+function stopTease(){
+  clearInterval(teaseTimer);
+  teaseTimer = null;
 }
 
 /* Filtered noise — used for the candle puff and firework pops. */
 function noiseBurst({ freq = 900, dur = 0.3, vol = 0.25, type = "bandpass" } = {}){
-  if (!musicOn || !audioCtx) return;
+  if (!soundOn || !audioCtx) return;
   const c = audioCtx;
   const len = Math.max(1, Math.floor(c.sampleRate * dur));
   const buf = c.createBuffer(1, len, c.sampleRate);
@@ -1235,13 +1312,134 @@ const blowSound = () => noiseBurst({ freq: 900, dur: .3,  vol: .25 });
 const popSound  = () => noiseBurst({ freq: 260, dur: .45, vol: .3, type: "lowpass" });
 
 soundBtn.addEventListener("click", () => {
-  musicOn = !musicOn;
-  soundBtn.textContent = musicOn ? "🔊" : "🔈";
-  soundBtn.setAttribute("aria-pressed", String(musicOn));
-  soundBtn.title = musicOn ? "Mute" : "Play music";
-  if (musicOn) playMelody();
-  else audioCtx?.suspend();
+  soundOn = !soundOn;
+  soundBtn.textContent = soundOn ? "🔊" : "🔈";
+  soundBtn.setAttribute("aria-pressed", String(soundOn));
+  soundBtn.title = soundOn ? "Mute" : "Sound on";
+
+  if (soundOn){
+    ac();                                  // this tap is the unlock gesture
+    if (!scene1.hidden) startTease();
+    if (localTrack) localTrack.play().catch(() => {});
+  } else {
+    stopTease();
+    localTrack?.pause();
+    audioCtx?.suspend();
+  }
 });
+
+/* ══════════════════════════════════════════════════════════════
+   HER SONG
+   Two ways to play it, and the config decides which:
+
+   song.file     an audio file you host yourself. Plays inline, loops, and
+                 rides the 🔊 toggle. Only legal to publish if you have the
+                 rights — a ripped commercial track on a public Pages site
+                 is distribution, so this is left empty by default.
+
+   song.spotify  an official Spotify embed. Nothing to host, nothing to
+                 infringe, the artist gets paid, and it shows the artwork.
+                 She taps play in the widget; browsers won't autoplay it.
+   ══════════════════════════════════════════════════════════════ */
+let localTrack = null;
+
+function setupLocalTrack(){
+  if (!CARD.song?.file) return;
+  localTrack = new Audio(CARD.song.file);
+  localTrack.loop = true;
+  localTrack.preload = "auto";
+  localTrack.volume = 0.75;
+  localTrack.addEventListener("error", () => {
+    console.warn("Song file missing:", CARD.song.file);
+    localTrack = null;
+    buildPlayer();                         // fall back to the embed
+  });
+}
+
+/* Each provider returns the iframe src, the height its player wants, and a
+   plain link for when the embed is blocked or there's no signal. */
+const PLAYERS = {
+  apple(song){
+    const { album, track, country = "us" } = song.appleMusic || {};
+    if (!album) return null;
+    const q = track ? `?i=${track}&theme=dark` : "?theme=dark";
+    return {
+      src: `https://embed.music.apple.com/${country}/album/${album}${q}`,
+      height: 175,
+      link: `https://music.apple.com/${country}/album/${album}${track ? `?i=${track}` : ""}`,
+      // Apple's embed needs these to reach its own storage and to hand off
+      // to the Apple Music app when she taps through.
+      sandbox: "allow-forms allow-popups allow-same-origin allow-scripts " +
+               "allow-storage-access-by-user-activation " +
+               "allow-top-navigation-by-user-activation",
+      allow: "autoplay *; encrypted-media *;"
+    };
+  },
+  spotify(song){
+    if (!song.spotify) return null;
+    return {
+      src: `https://open.spotify.com/embed/track/${song.spotify}?utm_source=generator&theme=0`,
+      height: 152,
+      link: `https://open.spotify.com/track/${song.spotify}`,
+      sandbox: null,
+      allow: "autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+    };
+  }
+};
+
+let playerBuilt = false;
+function buildPlayer(){
+  const song = CARD.song;
+  const host = $("nowPlaying");
+  if (!song || !host || playerBuilt) return;
+
+  const make = PLAYERS[song.provider] || PLAYERS.apple;
+  const cfg = make(song) || PLAYERS.spotify(song);   // fall back if unconfigured
+  if (!cfg) return;
+
+  playerBuilt = true;
+  host.innerHTML = "";
+  // Unhide before the iframe goes in. An iframe created inside a
+  // display:none subtree may not start loading until it's revealed, and
+  // that delay is visible as a dead grey box on the biggest moment.
+  host.hidden = false;
+
+  const label = document.createElement("p");
+  label.className = "np-label";
+  label.textContent = song.label || "her song 🎧";
+  host.appendChild(label);
+
+  // Built here rather than sitting in the HTML, so the music service isn't
+  // contacted at all until the card is actually opened.
+  const frame = document.createElement("iframe");
+  frame.src = cfg.src;
+  frame.width = "100%";
+  frame.height = String(cfg.height);
+  frame.allow = cfg.allow;
+  frame.loading = "eager";
+  frame.style.height = cfg.height + "px";
+  frame.title = `${song.title} — ${song.artist}`;
+  if (cfg.sandbox) frame.setAttribute("sandbox", cfg.sandbox);
+  host.appendChild(frame);
+
+  const link = document.createElement("a");
+  link.className = "np-fallback";
+  link.href = cfg.link;
+  link.target = "_blank";
+  link.rel = "noopener";
+  link.textContent = `${song.title} — ${song.artist} ↗`;
+  host.appendChild(link);
+}
+
+function startSong(){
+  if (localTrack){
+    if (soundOn) localTrack.play().catch(() => {});
+  } else {
+    buildPlayer();
+  }
+}
+
+setupLocalTrack();
 
 /* ══════════════════════════════════════════════════════════════
    CANDLES
@@ -1697,6 +1895,7 @@ function showCake(){
   scene0.hidden = true;
   scene1.hidden = false;
   scene1.style.animation = "rise .6s cubic-bezier(.2,.85,.3,1) both";
+  startTease();
 }
 
 let unwrapping = false;
@@ -1716,6 +1915,7 @@ $("skipIntro").addEventListener("click", (e) => { e.stopPropagation(); showCake(
 
 function openCard(){
   stopMic();
+  stopTease();
   scene1.style.transition = "opacity .5s ease, transform .5s ease";
   scene1.style.opacity = "0";
   scene1.style.transform = "scale(.94)";
@@ -1728,8 +1928,11 @@ function openCard(){
     cannons();
     setTimeout(() => launchFireworks(5), 900);
 
-    if (CARD.music && musicOn) playMelody();
-    if (CARD.music && !musicOn) soundBtn.animate(
+    startSong();
+
+    // Nudge the sound button if she hasn't found it — only meaningful when
+    // there are sounds of ours to unmute; the Spotify widget has its own.
+    if (localTrack && !soundOn) soundBtn.animate(
       [{transform:"scale(1)"},{transform:"scale(1.25)"},{transform:"scale(1)"}],
       {duration:600, iterations:3}
     );
