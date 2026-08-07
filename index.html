@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Happy Birthday!</title>
 <meta name="description" content="A little birthday card, made with love.">
+<meta name="theme-color" content="#1b0b1f">
 
-<!-- Social preview (edit the URL after you know your Pages address) -->
 <meta property="og:title" content="Happy Birthday!">
 <meta property="og:description" content="Tap to open your card.">
 <meta property="og:type" content="website">
@@ -15,7 +15,7 @@
 
 <style>
 /* ============================================================
-   PALETTE
+   PALETTE & TYPE
    ============================================================ */
 :root{
   --ink:        #fff6f9;
@@ -43,7 +43,6 @@
 }
 
 *,*::before,*::after{ box-sizing:border-box; }
-
 html,body{ height:100%; }
 
 body{
@@ -61,7 +60,6 @@ body{
   -webkit-font-smoothing:antialiased;
 }
 
-/* Soft drifting bokeh behind everything */
 body::before{
   content:"";
   position:fixed; inset:-20%;
@@ -76,7 +74,6 @@ body::before{
 }
 @keyframes drift{ to{ transform:translate3d(2.5%,-2.5%,0) scale(1.08); } }
 
-/* Confetti canvas sits above the scene but never blocks taps */
 #confetti{
   position:fixed; inset:0;
   width:100%; height:100%;
@@ -87,7 +84,7 @@ body::before{
 .wrap{
   position:relative;
   z-index:10;
-  max-width:760px;
+  max-width:820px;
   margin:0 auto;
   padding:clamp(20px,5vw,48px) clamp(18px,5vw,32px) 72px;
   min-height:100svh;
@@ -97,16 +94,13 @@ body::before{
   gap:clamp(20px,4vw,34px);
 }
 
-/* ============================================================
-   SCENE 1 — the cake
-   ============================================================ */
 .scene{ text-align:center; }
+.scene[hidden]{ display:none; }
 
 .prompt{
   font-family:var(--display);
   font-size:clamp(1.05rem,3.6vw,1.5rem);
   font-weight:700;
-  letter-spacing:.01em;
   color:var(--ink-soft);
   margin:0 0 6px;
   text-wrap:balance;
@@ -124,13 +118,188 @@ body::before{
   padding:1px 6px;
 }
 
+/* ============================================================
+   BUTTONS
+   ============================================================ */
+.btn{
+  appearance:none;
+  font:inherit;
+  font-family:var(--display);
+  font-weight:700;
+  font-size:.95rem;
+  cursor:pointer;
+  padding:12px 22px;
+  border-radius:999px;
+  border:1px solid var(--card-line);
+  background:var(--card);
+  color:var(--ink);
+  backdrop-filter:blur(10px);
+  transition:transform .18s ease, background .18s ease, box-shadow .18s ease, opacity .18s ease;
+  -webkit-tap-highlight-color:transparent;
+}
+.btn:hover{ transform:translateY(-2px); background:rgba(255,255,255,.13); box-shadow:0 10px 24px rgba(0,0,0,.3); }
+.btn:active{ transform:translateY(0); }
+.btn:focus-visible{ outline:2px solid var(--gold); outline-offset:3px; }
+.btn:disabled{ opacity:.5; cursor:default; transform:none; }
+.btn.primary{
+  background:linear-gradient(100deg,var(--pink),var(--coral));
+  border-color:transparent;
+  color:#2a0b1c;
+}
+.btn.ghost{
+  background:none;
+  border-color:transparent;
+  color:var(--ink-mute);
+  font-weight:600;
+  font-size:.85rem;
+  padding:8px 14px;
+}
+.btn.ghost:hover{ background:rgba(255,255,255,.07); box-shadow:none; }
+
+.sound{
+  position:fixed;
+  top:14px; right:14px;
+  z-index:70;
+  width:42px; height:42px;
+  display:grid; place-items:center;
+  font-size:1.05rem;
+  padding:0;
+  border-radius:50%;
+}
+
+/* ============================================================
+   SCENE 0 — the wrapped gift
+   ============================================================ */
+.gift-stage{
+  display:inline-block;
+  position:relative;
+  cursor:pointer;
+  border:0;
+  background:none;
+  padding:24px;
+  -webkit-tap-highlight-color:transparent;
+}
+.gift-stage:focus-visible{ outline:2px solid var(--gold); outline-offset:2px; border-radius:20px; }
+
+.gift{
+  position:relative;
+  width:clamp(180px,52vw,232px);
+  margin:0 auto;
+  animation:rattle 2.4s ease-in-out infinite;
+  transform-origin:50% 100%;
+  filter:drop-shadow(0 24px 34px rgba(0,0,0,.45));
+}
+@keyframes rattle{
+  0%,58%,100%{ transform:rotate(0) translateY(0); }
+  62%{ transform:rotate(-4deg) translateY(-6px); }
+  66%{ transform:rotate(4deg)  translateY(-3px); }
+  70%{ transform:rotate(-3deg) translateY(-5px); }
+  74%{ transform:rotate(2deg)  translateY(0); }
+  78%{ transform:rotate(0); }
+}
+
+.gift-body{
+  height:clamp(120px,34vw,150px);
+  border-radius:6px 6px 10px 10px;
+  background:
+    repeating-linear-gradient(45deg,
+      rgba(255,255,255,.09) 0 12px, transparent 12px 24px),
+    linear-gradient(165deg,var(--pink),#c9376f);
+  position:relative;
+}
+.gift-lid{
+  height:clamp(34px,9vw,42px);
+  margin:0 -9px 4px;
+  border-radius:8px;
+  background:
+    repeating-linear-gradient(45deg,
+      rgba(255,255,255,.11) 0 12px, transparent 12px 24px),
+    linear-gradient(165deg,#ff77ae,#d94a80);
+  position:relative;
+  transform-origin:50% 100%;
+  z-index:2;
+}
+/* Vertical + horizontal ribbon */
+.gift-body::after,
+.gift-lid::after{
+  content:"";
+  position:absolute;
+  left:50%; top:0; bottom:0;
+  width:clamp(24px,7vw,32px);
+  transform:translateX(-50%);
+  background:linear-gradient(90deg,#e8b53c,var(--gold),#e8b53c);
+}
+.bow{
+  position:absolute;
+  left:50%; top:-6px;
+  transform:translate(-50%,-58%);
+  width:clamp(74px,21vw,96px);
+  height:clamp(40px,11vw,50px);
+  z-index:3;
+}
+.bow span{
+  position:absolute;
+  top:0;
+  width:48%; height:100%;
+  background:linear-gradient(160deg,var(--gold),#dda32c);
+  border-radius:60% 40% 55% 45% / 70% 70% 30% 30%;
+  box-shadow:inset 0 -4px 6px rgba(0,0,0,.15);
+}
+.bow span:first-child{ left:0;  transform:rotate(-22deg); }
+.bow span:last-child { right:0; transform:rotate(22deg) scaleX(-1); }
+.bow::after{
+  content:"";
+  position:absolute;
+  left:50%; top:42%;
+  width:22%; aspect-ratio:1;
+  transform:translate(-50%,-50%);
+  border-radius:50%;
+  background:radial-gradient(circle at 35% 30%, #ffe08a, #d9a12c);
+}
+
+.tag{
+  position:absolute;
+  right:-6px; bottom:14px;
+  transform:rotate(7deg);
+  background:var(--cream);
+  color:#7a2a4d;
+  font-family:var(--hand);
+  font-size:clamp(.85rem,3vw,1rem);
+  padding:8px 14px;
+  border-radius:4px 10px 10px 4px;
+  box-shadow:0 6px 14px rgba(0,0,0,.35);
+  z-index:4;
+  max-width:60%;
+  line-height:1.25;
+}
+
+/* Opening */
+.gift.opening{ animation:none; }
+.gift.opening .gift-lid{
+  animation:lidOff .85s cubic-bezier(.3,-0.3,.4,1) forwards;
+}
+@keyframes lidOff{
+  to{ transform:translate(38%,-190px) rotate(38deg); opacity:0; }
+}
+.gift.opening .gift-body{
+  animation:squash .85s cubic-bezier(.2,.9,.3,1) forwards;
+}
+@keyframes squash{
+  30%{ transform:scale(1.1,.88); }
+  100%{ transform:scale(.7,.5) translateY(40px); opacity:0; }
+}
+.gift.opening .bow,
+.gift.opening .tag{ animation:flyOff .7s ease-in forwards; }
+@keyframes flyOff{ to{ transform:translateY(-140px) rotate(50deg); opacity:0; } }
+
+/* ============================================================
+   SCENE 1 — the cake
+   ============================================================ */
 .cake-stage{
   display:inline-block;
   position:relative;
   padding:0 10px;
 }
-
-/* Warm glow cast by the lit candles — fades as they go out */
 .cake-stage::before{
   content:"";
   position:absolute;
@@ -155,27 +324,18 @@ body::before{
 }
 
 .candle{
-  appearance:none;
-  background:none;
-  border:0;
+  appearance:none; background:none; border:0;
   padding:6px 4px 0;
   cursor:pointer;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
+  display:flex; flex-direction:column; align-items:center;
   -webkit-tap-highlight-color:transparent;
 }
-.candle:focus-visible{
-  outline:2px solid var(--gold);
-  outline-offset:4px;
-  border-radius:10px;
-}
+.candle:focus-visible{ outline:2px solid var(--gold); outline-offset:4px; border-radius:10px; }
 
 .flame{
   width:13px; height:20px;
   border-radius:50% 50% 46% 46% / 68% 68% 32% 32%;
-  background:
-    radial-gradient(ellipse at 50% 78%, #fff8d8 0%, var(--gold) 38%, var(--coral) 74%, rgba(255,90,60,0) 100%);
+  background:radial-gradient(ellipse at 50% 78%, #fff8d8 0%, var(--gold) 38%, var(--coral) 74%, rgba(255,90,60,0) 100%);
   box-shadow:0 0 16px 5px rgba(255,180,60,.55);
   transform-origin:50% 100%;
   animation:flicker 1.05s ease-in-out infinite alternate;
@@ -185,6 +345,12 @@ body::before{
   from{ transform:scale(1) rotate(-3deg); opacity:.92; }
   to  { transform:scale(1.14,1.2) rotate(3deg); opacity:1; }
 }
+/* While breath is detected, every flame leans hard */
+.blowing .flame{ animation:lean .18s ease-in-out infinite alternate; }
+@keyframes lean{
+  from{ transform:rotate(-26deg) scale(.9,1.15); }
+  to  { transform:rotate(-40deg) scale(.75,1.3); }
+}
 
 .wick{ width:2px; height:6px; background:#4a3a3a; border-radius:1px; }
 
@@ -192,32 +358,21 @@ body::before{
   width:11px;
   height:clamp(38px,9vw,54px);
   border-radius:4px 4px 2px 2px;
-  background:repeating-linear-gradient(-58deg,
-      var(--cream) 0 6px, var(--pink) 6px 12px);
+  background:repeating-linear-gradient(-58deg, var(--cream) 0 6px, var(--pink) 6px 12px);
   box-shadow:inset -3px 0 0 rgba(0,0,0,.16), 0 2px 5px rgba(0,0,0,.3);
 }
-.candle:nth-child(even) .stick{
-  background:repeating-linear-gradient(-58deg,
-      var(--cream) 0 6px, var(--mint) 6px 12px);
-}
-.candle:nth-child(3n) .stick{
-  background:repeating-linear-gradient(-58deg,
-      var(--cream) 0 6px, var(--lilac) 6px 12px);
-}
-
+.candle:nth-child(even) .stick{ background:repeating-linear-gradient(-58deg, var(--cream) 0 6px, var(--mint) 6px 12px); }
+.candle:nth-child(3n) .stick{ background:repeating-linear-gradient(-58deg, var(--cream) 0 6px, var(--lilac) 6px 12px); }
 .candle:hover .flame{ transform:scale(1.2); }
 
-/* Extinguished */
 .candle.out .flame{
-  animation:none;
-  opacity:0;
+  animation:none; opacity:0;
   transform:translateY(-14px) scale(.3);
   box-shadow:none;
   transition:all .45s ease;
 }
 .candle.out .wick{ background:#2b2222; }
 
-/* Smoke puff on blow-out */
 .smoke{
   position:absolute;
   width:9px; height:9px;
@@ -233,30 +388,20 @@ body::before{
   100%{ opacity:0;   transform:translate(-50%,-72px) scale(3.4); }
 }
 
-/* The cake itself */
 .cake{ position:relative; z-index:1; filter:drop-shadow(0 18px 26px rgba(0,0,0,.42)); }
-
 .icing{
-  width:clamp(200px,62vw,286px);
-  height:26px;
-  margin:0 auto;
+  width:clamp(200px,62vw,286px); height:26px; margin:0 auto;
   border-radius:14px 14px 8px 8px;
   background:linear-gradient(180deg,#fff6fa,#ffd9e8);
   position:relative;
 }
-/* Drips */
 .icing::after{
   content:"";
-  position:absolute;
-  left:0; right:0; top:20px;
-  height:16px;
-  background:
-    radial-gradient(closest-side, #ffd9e8 96%, transparent) repeat-x 0 0/26px 30px;
+  position:absolute; left:0; right:0; top:20px; height:16px;
+  background:radial-gradient(closest-side, #ffd9e8 96%, transparent) repeat-x 0 0/26px 30px;
 }
-
 .layer{
-  width:clamp(190px,59vw,272px);
-  margin:0 auto;
+  width:clamp(190px,59vw,272px); margin:0 auto;
   height:clamp(46px,12vw,62px);
   background:linear-gradient(180deg,#c96a8d,#a44a70);
   position:relative;
@@ -266,7 +411,6 @@ body::before{
   background:linear-gradient(180deg,#b8577f,#8d3a5f);
   border-radius:0 0 12px 12px;
 }
-/* Sprinkles */
 .layer::after{
   content:"";
   position:absolute; inset:0;
@@ -276,11 +420,8 @@ body::before{
     radial-gradient(circle, var(--cream) 40%, transparent 42%) 84% 24%/46px 46px;
   opacity:.75;
 }
-
 .plate{
-  width:clamp(250px,78vw,352px);
-  height:14px;
-  margin:0 auto;
+  width:clamp(250px,78vw,352px); height:14px; margin:0 auto;
   border-radius:0 0 50% 50%/0 0 100% 100%;
   background:linear-gradient(180deg,#e9dbe4,#a9909e);
 }
@@ -292,6 +433,43 @@ body::before{
   letter-spacing:.06em;
   text-transform:uppercase;
   min-height:1.2em;
+}
+
+/* --- Breath meter --- */
+.mic-row{
+  margin-top:20px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:12px;
+}
+.meter{
+  width:min(260px,72vw);
+  height:8px;
+  border-radius:999px;
+  background:rgba(255,255,255,.11);
+  overflow:hidden;
+  position:relative;
+}
+.meter::after{
+  content:"";
+  position:absolute; inset:0;
+  left:calc(var(--trip,.6) * 100%);
+  border-left:2px dashed rgba(255,255,255,.4);
+}
+.meter i{
+  display:block; height:100%;
+  width:calc(var(--level,0) * 100%);
+  border-radius:999px;
+  background:linear-gradient(90deg,var(--mint),var(--gold),var(--pink));
+  transition:width .07s linear;
+}
+.mic-hint{
+  font-size:.82rem;
+  color:var(--ink-mute);
+  min-height:1.2em;
+  text-wrap:balance;
+  max-width:34ch;
 }
 
 /* ============================================================
@@ -330,10 +508,7 @@ body::before{
 .headline .name{ display:block; }
 
 .age-badge{
-  display:inline-flex;
-  align-items:baseline;
-  gap:.4em;
-  margin-top:2px;
+  display:inline-flex; align-items:baseline; gap:.4em;
   padding:7px 16px;
   border-radius:999px;
   background:var(--card);
@@ -346,18 +521,13 @@ body::before{
 }
 .age-badge b{ font-size:1.35em; color:var(--gold); }
 
-/* --- Photo frame -------------------------------------------------
-   Drop a file at assets/photo.jpg and it appears here automatically.
-   If it's missing, a tasteful initial-monogram shows instead.
------------------------------------------------------------------- */
 .photo-frame{
   position:relative;
   width:clamp(180px,52vw,236px);
   aspect-ratio:1;
   border-radius:50%;
   padding:7px;
-  background:conic-gradient(from 210deg,
-      var(--gold), var(--pink), var(--lilac), var(--mint), var(--gold));
+  background:conic-gradient(from 210deg, var(--gold), var(--pink), var(--lilac), var(--mint), var(--gold));
   box-shadow:0 18px 40px rgba(0,0,0,.42);
   animation:bob 5.5s ease-in-out infinite alternate;
 }
@@ -382,7 +552,6 @@ body::before{
 .photo-frame.no-photo img{ display:none; }
 .photo-frame.no-photo .photo-fallback{ display:grid; }
 
-/* Party hat, drawn in CSS so it needs no asset */
 .hat{
   position:absolute;
   top:-13%; left:50%;
@@ -410,10 +579,8 @@ body::before{
   color:var(--ink-mute);
 }
 
-/* The message */
 .letter{
-  width:100%;
-  max-width:560px;
+  width:100%; max-width:560px;
   padding:clamp(22px,5.5vw,34px);
   border-radius:22px;
   background:var(--card);
@@ -437,8 +604,7 @@ body::before{
   color:var(--ink);
 }
 .signature{
-  margin-top:22px;
-  padding-top:18px;
+  margin-top:22px; padding-top:18px;
   border-top:1px solid var(--card-line);
   font-family:var(--hand);
   font-size:clamp(1.25rem,4.6vw,1.6rem);
@@ -446,39 +612,121 @@ body::before{
   text-align:right;
 }
 
-.actions{
-  display:flex;
-  flex-wrap:wrap;
-  gap:12px;
-  justify-content:center;
-}
-.btn{
-  appearance:none;
-  font:inherit;
+/* ============================================================
+   MEMORY GALLERY — polaroids
+   ============================================================ */
+.gallery-wrap{ width:100%; }
+.gallery-title{
   font-family:var(--display);
   font-weight:700;
-  font-size:.95rem;
-  cursor:pointer;
-  padding:12px 22px;
-  border-radius:999px;
-  border:1px solid var(--card-line);
-  background:var(--card);
-  color:var(--ink);
-  backdrop-filter:blur(10px);
-  transition:transform .18s ease, background .18s ease, box-shadow .18s ease;
+  font-size:clamp(1rem,3.4vw,1.2rem);
+  color:var(--ink-soft);
+  margin:0 0 18px;
+  letter-spacing:.01em;
+}
+.gallery{
+  display:flex;
+  gap:clamp(14px,4vw,26px);
+  padding:14px clamp(14px,5vw,30px) 26px;
+  overflow-x:auto;
+  scroll-snap-type:x mandatory;
+  scrollbar-width:none;
+  justify-content:safe center;
+}
+.gallery::-webkit-scrollbar{ display:none; }
+
+.polaroid{
+  flex:0 0 auto;
+  scroll-snap-align:center;
+  width:clamp(146px,42vw,178px);
+  padding:11px 11px 0;
+  background:linear-gradient(180deg,#fffdf8,#f2e7de);
+  border-radius:3px;
+  box-shadow:0 14px 30px rgba(0,0,0,.42);
+  cursor:zoom-in;
+  border:0;
+  position:relative;
+  transition:transform .28s cubic-bezier(.2,.9,.3,1), box-shadow .28s ease;
   -webkit-tap-highlight-color:transparent;
 }
-.btn:hover{
-  transform:translateY(-2px);
-  background:rgba(255,255,255,.13);
-  box-shadow:0 10px 24px rgba(0,0,0,.3);
+.polaroid:nth-child(odd) { transform:rotate(-2.6deg); }
+.polaroid:nth-child(even){ transform:rotate(2.2deg); }
+.polaroid:nth-child(3n)  { transform:rotate(1.2deg); }
+.polaroid:hover, .polaroid:focus-visible{
+  transform:rotate(0) translateY(-10px) scale(1.05);
+  box-shadow:0 22px 44px rgba(0,0,0,.5);
+  z-index:2;
+  outline:none;
 }
-.btn:active{ transform:translateY(0); }
-.btn:focus-visible{ outline:2px solid var(--gold); outline-offset:3px; }
-.btn.primary{
-  background:linear-gradient(100deg,var(--pink),var(--coral));
-  border-color:transparent;
-  color:#2a0b1c;
+.polaroid img{
+  width:100%; aspect-ratio:1;
+  object-fit:cover;
+  display:block;
+  background:#e3d6cc;
+}
+.polaroid .cap{
+  display:block;
+  font-family:var(--hand);
+  font-size:.88rem;
+  color:#6b4a5a;
+  padding:9px 4px 12px;
+  min-height:2.4em;
+  line-height:1.3;
+  text-wrap:balance;
+}
+/* Sticky-tape strip */
+.polaroid::before{
+  content:"";
+  position:absolute;
+  top:-10px; left:50%;
+  transform:translateX(-50%) rotate(-3deg);
+  width:52px; height:20px;
+  background:rgba(255,247,214,.5);
+  border-left:1px solid rgba(255,255,255,.35);
+  border-right:1px solid rgba(255,255,255,.35);
+  box-shadow:0 1px 3px rgba(0,0,0,.2);
+}
+
+/* Lightbox */
+.lightbox{
+  position:fixed; inset:0;
+  z-index:90;
+  display:none;
+  place-items:center;
+  padding:24px;
+  background:rgba(12,4,16,.9);
+  backdrop-filter:blur(10px);
+  cursor:zoom-out;
+}
+.lightbox.open{ display:grid; animation:fadeIn .25s ease; }
+@keyframes fadeIn{ from{ opacity:0; } }
+.lightbox img{
+  max-width:min(92vw,760px);
+  max-height:72svh;
+  border-radius:10px;
+  box-shadow:0 30px 70px rgba(0,0,0,.6);
+  background:#2a1226;
+}
+.lightbox p{
+  margin:18px 0 0;
+  font-family:var(--hand);
+  font-size:1.25rem;
+  color:var(--ink-soft);
+  text-align:center;
+  text-wrap:balance;
+}
+.lightbox .close{
+  position:absolute;
+  top:16px; right:16px;
+  width:44px; height:44px;
+  border-radius:50%;
+  display:grid; place-items:center;
+  font-size:1.2rem;
+  padding:0;
+}
+
+.actions{
+  display:flex; flex-wrap:wrap; gap:12px; justify-content:center;
 }
 
 .foot{
@@ -488,17 +736,25 @@ body::before{
   letter-spacing:.04em;
 }
 
-/* Sound toggle, pinned out of the way */
-.sound{
+/* Toast for keepsake feedback */
+.toast{
   position:fixed;
-  top:14px; right:14px;
-  z-index:70;
-  width:42px; height:42px;
-  display:grid; place-items:center;
-  font-size:1.05rem;
-  padding:0;
-  border-radius:50%;
+  left:50%; bottom:26px;
+  transform:translate(-50%,140%);
+  z-index:95;
+  background:rgba(20,8,24,.94);
+  border:1px solid var(--card-line);
+  color:var(--ink-soft);
+  padding:13px 20px;
+  border-radius:14px;
+  font-size:.9rem;
+  max-width:min(90vw,420px);
+  text-align:center;
+  box-shadow:0 18px 40px rgba(0,0,0,.5);
+  transition:transform .38s cubic-bezier(.2,.9,.3,1);
+  text-wrap:balance;
 }
+.toast.show{ transform:translate(-50%,0); }
 
 @media (prefers-reduced-motion: reduce){
   *,*::before,*::after{
@@ -507,6 +763,7 @@ body::before{
     transition-duration:.01ms !important;
   }
   .reveal{ opacity:1; transform:none; }
+  .gift{ animation:none; }
 }
 </style>
 </head>
@@ -514,15 +771,31 @@ body::before{
 
 <canvas id="confetti" aria-hidden="true"></canvas>
 
-<button class="btn sound" id="soundBtn" type="button"
-        aria-pressed="false" title="Play music">🔈</button>
+<button class="btn sound" id="soundBtn" type="button" aria-pressed="false" title="Play music">🔈</button>
 
 <main class="wrap">
 
+  <!-- ---------- SCENE 0: the wrapped gift ---------- -->
+  <section class="scene" id="scene0">
+    <h1 class="prompt" id="prompt0">Something arrived for you…</h1>
+    <p class="prompt-sub">Tap the box to open it</p>
+
+    <button class="gift-stage" id="giftBtn" type="button" aria-label="Open the present">
+      <div class="gift" id="gift">
+        <span class="bow" aria-hidden="true"><span></span><span></span></span>
+        <div class="gift-lid"></div>
+        <div class="gift-body"></div>
+        <span class="tag" id="giftTag"></span>
+      </div>
+    </button>
+
+    <p><button class="btn ghost" id="skipIntro" type="button">skip the wrapping →</button></p>
+  </section>
+
   <!-- ---------- SCENE 1: blow out the candles ---------- -->
-  <section class="scene" id="scene1">
+  <section class="scene" id="scene1" hidden>
     <h1 class="prompt" id="prompt1">Make a wish…</h1>
-    <p class="prompt-sub">Tap each candle to blow it out <span aria-hidden="true">·</span> or press <kbd>Space</kbd></p>
+    <p class="prompt-sub" id="sub1">Tap each candle to blow it out <span aria-hidden="true">·</span> or press <kbd>Space</kbd></p>
 
     <div class="cake-stage" id="cakeStage">
       <div class="candles" id="candles" role="group" aria-label="Birthday candles"></div>
@@ -535,6 +808,12 @@ body::before{
     </div>
 
     <p class="counter" id="counter" aria-live="polite"></p>
+
+    <div class="mic-row">
+      <button class="btn" id="micBtn" type="button">🎤 Blow them out for real</button>
+      <div class="meter" id="meter" hidden><i id="meterFill"></i></div>
+      <p class="mic-hint" id="micHint"></p>
+    </div>
   </section>
 
   <!-- ---------- SCENE 2: the card ---------- -->
@@ -552,7 +831,7 @@ body::before{
       <figure style="margin:0">
         <div class="photo-frame" id="photoFrame">
           <span class="hat" aria-hidden="true"></span>
-          <img id="photo" alt="" >
+          <img id="photo" alt="">
           <span class="photo-fallback" id="fallback" aria-hidden="true"></span>
         </div>
         <figcaption class="caption" id="caption"></figcaption>
@@ -565,15 +844,32 @@ body::before{
       <p class="signature" id="signOut"></p>
     </div>
 
-    <div class="actions reveal" style="animation-delay:.65s">
+    <div class="gallery-wrap reveal" id="galleryWrap" style="animation-delay:.62s" hidden>
+      <h2 class="gallery-title" id="galleryTitle"></h2>
+      <div class="gallery" id="gallery"></div>
+    </div>
+
+    <div class="actions reveal" style="animation-delay:.72s">
       <button class="btn primary" type="button" id="moreConfetti">More confetti 🎉</button>
+      <button class="btn" type="button" id="saveBtn">Save as a keepsake 📸</button>
       <button class="btn" type="button" id="replay">Light the candles again</button>
     </div>
 
-    <p class="foot reveal" style="animation-delay:.8s" id="footOut"></p>
+    <p class="foot reveal" style="animation-delay:.85s" id="footOut"></p>
   </section>
 
 </main>
+
+<!-- Lightbox for the gallery -->
+<div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Photo">
+  <button class="btn close" id="lightboxClose" type="button" aria-label="Close">✕</button>
+  <div>
+    <img id="lightboxImg" alt="">
+    <p id="lightboxCap"></p>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script>
 /* ══════════════════════════════════════════════════════════════
@@ -583,18 +879,20 @@ const CARD = {
   // Who it's for. Also overridable in the URL: index.html?to=Sophie
   name: "Birthday Girl",
 
-  // Age shown in the little badge. Set to null to hide it entirely.
+  // Age shown in the little badge. null hides it.
   age: null,
 
   // How many candles on the cake (1–12 looks best).
   candles: 5,
 
-  // The photo. Drop your image at assets/photo.jpg (or change this path).
+  // Text on the gift tag in the opening scene.
+  giftTag: "To you,\nopen me 💝",
+
+  // The main photo. Drop your image at assets/photo.jpg.
   photo: "assets/photo.jpg",
   photoCaption: "the birthday girl ✨",
 
-  // The message. First line is the greeting; each following string
-  // becomes its own paragraph.
+  // The message. Each string becomes its own paragraph.
   greeting: "Happy birthday!",
   message: [
     "Another trip around the sun, and somehow you keep getting better at it.",
@@ -603,11 +901,22 @@ const CARD = {
   ],
   signature: "— with love",
 
-  // Tiny line at the very bottom. Set to "" to hide.
+  // ── MEMORY GALLERY ──────────────────────────────────────────
+  // Drop photos in assets/ and list them here. Any that are
+  // missing quietly disappear, so extras are harmless.
+  galleryTitle: "a few favourites 📷",
+  gallery: [
+    { src: "assets/memory-1.jpg", caption: "" },
+    { src: "assets/memory-2.jpg", caption: "" },
+    { src: "assets/memory-3.jpg", caption: "" },
+    { src: "assets/memory-4.jpg", caption: "" }
+  ],
+
+  // Tiny line at the very bottom. "" hides it.
   footer: "made just for you 💛",
 
-  // Play a little Happy Birthday melody when the card opens?
-  // (Starts muted either way — browsers require a tap first.)
+  // Play a little Happy Birthday melody? (Starts muted either way —
+  // browsers require a tap before any sound.)
   music: true
 };
 /* ══════════════════════════════════════════════════════════════
@@ -617,45 +926,64 @@ const CARD = {
 const $ = (id) => document.getElementById(id);
 const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-/* Let ?to=Name override the configured name, so one deploy can be
-   reused for more than one person. */
 const nameFromUrl = new URLSearchParams(location.search).get("to");
 const NAME = (nameFromUrl || CARD.name || "").trim();
 
-/* ---------- Populate the card ---------- */
+/* ---------- Populate ---------- */
 document.title = NAME ? `Happy Birthday, ${NAME}!` : "Happy Birthday!";
 $("nameOut").textContent = NAME ? `${NAME}!` : "!";
+$("prompt0").textContent = NAME ? `Something arrived for you, ${NAME}…` : "Something arrived for you…";
 $("prompt1").textContent = NAME ? `Make a wish, ${NAME}…` : "Make a wish…";
+$("giftTag").textContent = CARD.giftTag;
+$("giftTag").style.whiteSpace = "pre-line";
 
-if (CARD.age != null) {
+if (CARD.age != null){
   const badge = $("ageBadge");
   badge.hidden = false;
   badge.innerHTML = `<b>${CARD.age}</b> looks good on you`;
 }
 
 $("greetingOut").textContent = CARD.greeting;
-$("bodyOut").innerHTML = CARD.message
-  .map(p => `<p>${p}</p>`)
-  .join("");
+$("bodyOut").innerHTML = CARD.message.map(p => `<p>${p}</p>`).join("");
 $("signOut").textContent = CARD.signature;
 $("caption").textContent = CARD.photoCaption;
 $("footOut").textContent = CARD.footer;
 
-/* ---------- Photo, with a graceful fallback ---------- */
+/* ---------- Main photo, with a graceful fallback ---------- */
 const frame = $("photoFrame");
 const photo = $("photo");
+let photoReady = false;
 $("fallback").textContent = (NAME[0] || "🎂").toUpperCase();
 photo.alt = NAME ? `A photo of ${NAME}` : "Birthday photo";
+photo.addEventListener("load",  () => { photoReady = true; });
 photo.addEventListener("error", () => frame.classList.add("no-photo"));
 photo.src = CARD.photo;
 
+/* ---------- Little helpers ---------- */
+function buzz(pattern){
+  if (reduceMotion) return;
+  try { navigator.vibrate?.(pattern); } catch {}
+}
+
+let toastTimer = null;
+function toast(msg, ms = 3400){
+  const t = $("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove("show"), ms);
+}
+
 /* ══════════════════════════════════════════════════════════════
-   Confetti
+   PARTICLES — confetti, streamers and fireworks share one canvas
    ══════════════════════════════════════════════════════════════ */
 const canvas = $("confetti");
 const ctx = canvas.getContext("2d");
 const COLORS = ["#ff5f9e","#ffc94d","#4fe0c1","#b98cff","#ff7a6b","#fff3e2"];
-let pieces = [];
+
+let pieces  = [];   // confetti rectangles
+let rockets = [];   // firework shells on the way up
+let sparks  = [];   // firework burst particles
 let raf = null;
 
 function sizeCanvas(){
@@ -666,6 +994,8 @@ function sizeCanvas(){
 }
 sizeCanvas();
 addEventListener("resize", sizeCanvas);
+
+function start(){ if (!raf) raf = requestAnimationFrame(tick); }
 
 function spawn(count, originX, originY, spread){
   if (reduceMotion) count = Math.min(count, 24);
@@ -688,57 +1018,135 @@ function spawn(count, originX, originY, spread){
   start();
 }
 
-/* A burst from both bottom corners, the classic cannon look. */
+/* The classic two-cannon burst. */
 function cannons(){
   spawn(90, innerWidth * .04, innerHeight * .96, 1.0);
   spawn(90, innerWidth * .96, innerHeight * .96, 1.0);
   setTimeout(() => spawn(70, innerWidth * .5, innerHeight * .55, 2.6), 220);
 }
 
+function launchFireworks(n = 5){
+  if (reduceMotion) n = Math.min(n, 2);
+  for (let i = 0; i < n; i++){
+    setTimeout(() => {
+      rockets.push({
+        x: innerWidth * (.14 + Math.random() * .72),
+        y: innerHeight + 12,
+        vx: (Math.random() - .5) * 1.2,
+        vy: -(10 + Math.random() * 3.5),
+        targetY: innerHeight * (.13 + Math.random() * .3),
+        color: COLORS[(Math.random() * COLORS.length) | 0]
+      });
+      start();
+    }, i * 420 + Math.random() * 160);
+  }
+}
+
+function burst(r){
+  const n = reduceMotion ? 24 : 74;
+  for (let i = 0; i < n; i++){
+    const a = Math.random() * Math.PI * 2;
+    const s = 1.6 + Math.random() * 5.4;
+    sparks.push({
+      x: r.x, y: r.y,
+      vx: Math.cos(a) * s,
+      vy: Math.sin(a) * s,
+      color: Math.random() < .25 ? "#fff3e2" : r.color,
+      life: 0,
+      maxLife: 55 + Math.random() * 40
+    });
+  }
+  popSound();
+  buzz(18);
+}
+
 function tick(){
   ctx.clearRect(0, 0, innerWidth, innerHeight);
 
+  /* --- confetti --- */
   for (let i = pieces.length - 1; i >= 0; i--){
     const p = pieces[i];
     p.life++;
-    p.vy += 0.24;              // gravity
-    p.vx *= 0.992;             // air drag
+    p.vy += 0.24;          // gravity
+    p.vx *= 0.992;         // drag
     p.vy *= 0.992;
     p.x += p.vx;
     p.y += p.vy;
     p.rot += p.spin;
 
-    if (p.y > innerHeight + 60 || p.life > 700){
-      pieces.splice(i, 1);
-      continue;
-    }
+    if (p.y > innerHeight + 60 || p.life > 700){ pieces.splice(i, 1); continue; }
 
     ctx.save();
     ctx.translate(p.x, p.y);
     ctx.rotate(p.rot);
     ctx.fillStyle = p.color;
     ctx.globalAlpha = p.life > 560 ? 1 - (p.life - 560) / 140 : 1;
-    if (p.ribbon){
-      // A curled streamer: squash the width as it spins
-      ctx.fillRect(-p.w/2, -p.h/2, p.w * Math.abs(Math.cos(p.rot)), p.h);
-    } else {
-      ctx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
-    }
+    if (p.ribbon) ctx.fillRect(-p.w/2, -p.h/2, p.w * Math.abs(Math.cos(p.rot)), p.h);
+    else          ctx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
     ctx.restore();
   }
 
-  if (pieces.length) raf = requestAnimationFrame(tick);
-  else { raf = null; ctx.clearRect(0, 0, innerWidth, innerHeight); }
+  /* --- rockets --- */
+  ctx.globalCompositeOperation = "lighter";
+  for (let i = rockets.length - 1; i >= 0; i--){
+    const r = rockets[i];
+    r.vy += 0.06;
+    r.x += r.vx;
+    r.y += r.vy;
+
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = r.color;
+    ctx.beginPath();
+    ctx.arc(r.x, r.y, 2.6, 0, Math.PI * 2);
+    ctx.fill();
+    // a short glowing tail
+    ctx.globalAlpha = .3;
+    ctx.fillRect(r.x - 1.2, r.y, 2.4, 14);
+
+    if (r.y <= r.targetY || r.vy >= -1.2){ burst(r); rockets.splice(i, 1); }
+  }
+
+  /* --- sparks --- */
+  for (let i = sparks.length - 1; i >= 0; i--){
+    const s = sparks[i];
+    s.life++;
+    s.vy += 0.055;
+    s.vx *= 0.972;
+    s.vy *= 0.972;
+    s.x += s.vx;
+    s.y += s.vy;
+
+    if (s.life > s.maxLife){ sparks.splice(i, 1); continue; }
+
+    ctx.globalAlpha = Math.max(0, 1 - s.life / s.maxLife);
+    ctx.fillStyle = s.color;
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, 2.4, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.globalCompositeOperation = "source-over";
+  ctx.globalAlpha = 1;
+
+  if (pieces.length || rockets.length || sparks.length){
+    raf = requestAnimationFrame(tick);
+  } else {
+    raf = null;
+    ctx.clearRect(0, 0, innerWidth, innerHeight);
+  }
 }
-function start(){ if (!raf) raf = requestAnimationFrame(tick); }
 
 /* ══════════════════════════════════════════════════════════════
-   Sound — a short Happy Birthday melody via WebAudio.
-   No audio files, so nothing extra to host.
+   SOUND — generated with WebAudio, so there's no file to host.
    ══════════════════════════════════════════════════════════════ */
 let audioCtx = null;
 let musicOn = false;
 const soundBtn = $("soundBtn");
+
+function ac(){
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (audioCtx.state === "suspended") audioCtx.resume();
+  return audioCtx;
+}
 
 // Happy Birthday to You (public domain). [semitones from A4, beats]
 const MELODY = [
@@ -748,31 +1156,51 @@ const MELODY = [
   [ 6,.75],[ 6,.25],[ 5,1],[ 1,1],[ 3,1],[ 1,2]
 ];
 
-function note(semi, startAt, beats){
-  const freq = 440 * Math.pow(2, semi / 12);
+function note(c, semi, startAt, beats){
   const dur = beats * 0.42;
-
-  const osc  = audioCtx.createOscillator();
-  const gain = audioCtx.createGain();
+  const osc  = c.createOscillator();
+  const gain = c.createGain();
   osc.type = "triangle";
-  osc.frequency.value = freq;
-
+  osc.frequency.value = 440 * Math.pow(2, semi / 12);
   gain.gain.setValueAtTime(0.0001, startAt);
   gain.gain.exponentialRampToValueAtTime(0.13, startAt + 0.02);
   gain.gain.exponentialRampToValueAtTime(0.0001, startAt + dur * 0.92);
-
-  osc.connect(gain).connect(audioCtx.destination);
+  osc.connect(gain).connect(c.destination);
   osc.start(startAt);
   osc.stop(startAt + dur);
   return dur;
 }
 
 function playMelody(){
-  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  audioCtx.resume();
-  let t = audioCtx.currentTime + 0.15;
-  for (const [semi, beats] of MELODY) t += note(semi, t, beats);
+  const c = ac();
+  let t = c.currentTime + 0.15;
+  for (const [semi, beats] of MELODY) t += note(c, semi, t, beats);
 }
+
+/* Filtered noise — used for the candle puff and firework pops. */
+function noiseBurst({ freq = 900, dur = 0.3, vol = 0.25, type = "bandpass" } = {}){
+  if (!musicOn || !audioCtx) return;
+  const c = audioCtx;
+  const len = Math.max(1, Math.floor(c.sampleRate * dur));
+  const buf = c.createBuffer(1, len, c.sampleRate);
+  const data = buf.getChannelData(0);
+  for (let i = 0; i < len; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / len);
+
+  const src = c.createBufferSource();
+  src.buffer = buf;
+  const filter = c.createBiquadFilter();
+  filter.type = type;
+  filter.frequency.value = freq;
+  const g = c.createGain();
+  g.gain.setValueAtTime(vol, c.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.0001, c.currentTime + dur);
+
+  src.connect(filter).connect(g).connect(c.destination);
+  src.start();
+}
+
+const blowSound = () => noiseBurst({ freq: 900, dur: .3,  vol: .25 });
+const popSound  = () => noiseBurst({ freq: 260, dur: .45, vol: .3, type: "lowpass" });
 
 soundBtn.addEventListener("click", () => {
   musicOn = !musicOn;
@@ -780,43 +1208,23 @@ soundBtn.addEventListener("click", () => {
   soundBtn.setAttribute("aria-pressed", String(musicOn));
   soundBtn.title = musicOn ? "Mute" : "Play music";
   if (musicOn) playMelody();
-  else if (audioCtx) audioCtx.suspend();
+  else audioCtx?.suspend();
 });
 
-/* A soft puff sound when a candle goes out. */
-function blowSound(){
-  if (!musicOn || !audioCtx) return;
-  const noise = audioCtx.createBufferSource();
-  const len = audioCtx.sampleRate * 0.3;
-  const buf = audioCtx.createBuffer(1, len, audioCtx.sampleRate);
-  const data = buf.getChannelData(0);
-  for (let i = 0; i < len; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / len);
-  noise.buffer = buf;
-
-  const filter = audioCtx.createBiquadFilter();
-  filter.type = "bandpass";
-  filter.frequency.value = 900;
-
-  const g = audioCtx.createGain();
-  g.gain.setValueAtTime(0.25, audioCtx.currentTime);
-  g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.3);
-
-  noise.connect(filter).connect(g).connect(audioCtx.destination);
-  noise.start();
-}
-
 /* ══════════════════════════════════════════════════════════════
-   Candles
+   CANDLES
    ══════════════════════════════════════════════════════════════ */
 const candleBox = $("candles");
 const stage = $("cakeStage");
 const counter = $("counter");
 const TOTAL = Math.max(1, Math.min(12, CARD.candles | 0));
 let lit = TOTAL;
+let cardOpened = false;
 
 function buildCandles(){
   candleBox.innerHTML = "";
   lit = TOTAL;
+  cardOpened = false;
   stage.style.setProperty("--glow", "1");
   updateCounter();
 
@@ -832,18 +1240,16 @@ function buildCandles(){
 }
 
 function updateCounter(){
-  counter.textContent = lit > 0
-    ? `${lit} candle${lit === 1 ? "" : "s"} still lit`
-    : "";
+  counter.textContent = lit > 0 ? `${lit} candle${lit === 1 ? "" : "s"} still lit` : "";
 }
 
 function blowOut(btn){
-  if (btn.classList.contains("out")) return;
+  if (!btn || btn.classList.contains("out")) return;
   btn.classList.add("out");
   btn.disabled = true;
   lit--;
 
-  // Smoke, positioned over the candle that just went out
+  // Smoke puff over the candle that just went out
   const r = btn.getBoundingClientRect();
   const s = stage.getBoundingClientRect();
   const puff = document.createElement("span");
@@ -854,38 +1260,425 @@ function blowOut(btn){
   setTimeout(() => puff.remove(), 1600);
 
   blowSound();
+  buzz(28);
   stage.style.setProperty("--glow", String(lit / TOTAL));
   updateCounter();
 
-  if (lit === 0) setTimeout(openCard, 620);
+  if (lit === 0 && !cardOpened){
+    cardOpened = true;
+    buzz([40, 60, 40, 60, 120]);
+    setTimeout(openCard, 620);
+  }
 }
 
-/* Space / Enter blows out the next lit candle. */
+const nextLitCandle = () => candleBox.querySelector(".candle:not(.out)");
+
 addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && $("lightbox").classList.contains("open")){ closeLightbox(); return; }
+  if (scene1.hidden) return;
   if (e.code !== "Space" && e.code !== "Enter") return;
   if (document.activeElement?.classList.contains("candle")) return; // let the button handle it
-  const next = candleBox.querySelector(".candle:not(.out)");
+  const next = nextLitCandle();
   if (next){ e.preventDefault(); blowOut(next); }
 });
 
 /* ══════════════════════════════════════════════════════════════
-   Scene transition
+   BREATH DETECTION — listen to the mic and look for a real puff.
+   Breath is broadband, low-frequency-heavy noise, which is what
+   separates it from speech or a TV in the background.
    ══════════════════════════════════════════════════════════════ */
+const micBtn   = $("micBtn");
+const micHint  = $("micHint");
+const meter    = $("meter");
+const meterFill= $("meterFill");
+
+let micStream = null;
+let micRaf = null;
+
+async function enableMic(){
+  if (!isSecureContext || !navigator.mediaDevices?.getUserMedia){
+    micBtn.disabled = true;
+    micHint.textContent = "Blowing needs the hosted (https) version — for now, just tap the candles.";
+    return;
+  }
+
+  micBtn.disabled = true;
+  micHint.textContent = "Asking for the microphone…";
+
+  try{
+    micStream = await navigator.mediaDevices.getUserMedia({
+      audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false }
+    });
+  }catch{
+    micBtn.disabled = false;
+    micHint.textContent = "No microphone this time — tapping the candles works just as well.";
+    return;
+  }
+
+  const c = ac();
+  const source = c.createMediaStreamSource(micStream);
+  const analyser = c.createAnalyser();
+  analyser.fftSize = 1024;
+  analyser.smoothingTimeConstant = 0.55;
+  source.connect(analyser);      // deliberately NOT connected to the speakers
+
+  const time = new Uint8Array(analyser.fftSize);
+  const freq = new Uint8Array(analyser.frequencyBinCount);
+  const nyquist = c.sampleRate / 2;
+  const lowCut = Math.floor((800 / nyquist) * analyser.frequencyBinCount);
+
+  // Listen to the room for a moment so a noisy kitchen doesn't trip it.
+  let ambient = 0;
+  const calibrateUntil = performance.now() + 1200;
+  let threshold = 0.06;
+  let calibrating = true;
+
+  meter.hidden = false;
+  micBtn.textContent = "🎤 Listening…";
+  micHint.textContent = "Hold still for a second while I listen to the room…";
+
+  let overSince = 0;
+  let lastBlow = 0;
+
+  function loop(){
+    analyser.getByteTimeDomainData(time);
+    analyser.getByteFrequencyData(freq);
+
+    // RMS level from the waveform
+    let sum = 0;
+    for (let i = 0; i < time.length; i++){
+      const v = (time[i] - 128) / 128;
+      sum += v * v;
+    }
+    const rms = Math.sqrt(sum / time.length);
+
+    // How much of the energy sits below ~800 Hz
+    let low = 0, all = 0;
+    for (let i = 0; i < freq.length; i++){
+      all += freq[i];
+      if (i < lowCut) low += freq[i];
+    }
+    const lowRatio = all > 0 ? low / all : 0;
+
+    const now = performance.now();
+
+    if (calibrating){
+      ambient = Math.max(ambient, rms);
+      if (now > calibrateUntil){
+        calibrating = false;
+        threshold = Math.min(0.28, Math.max(0.055, ambient * 2.6));
+        micBtn.textContent = "🎤 Now blow!";
+        micHint.textContent = "Hold your phone close and blow — like you mean it.";
+        meter.style.setProperty("--trip", String(Math.min(1, threshold / 0.35)));
+      }
+    } else {
+      const blowing = rms > threshold && lowRatio > 0.5;
+
+      if (blowing){
+        if (!overSince) overSince = now;
+        stage.classList.add("blowing");
+        // Sustained for 140ms? Start snuffing them, one every 240ms.
+        if (now - overSince > 140 && now - lastBlow > 240){
+          lastBlow = now;
+          const next = nextLitCandle();
+          if (next) blowOut(next);
+        }
+      } else {
+        overSince = 0;
+        stage.classList.remove("blowing");
+      }
+    }
+
+    meterFill.style.setProperty("--level", String(Math.min(1, rms / 0.35)));
+
+    if (lit > 0 && !scene1.hidden) micRaf = requestAnimationFrame(loop);
+    else stopMic();
+  }
+
+  micRaf = requestAnimationFrame(loop);
+}
+
+function stopMic(){
+  cancelAnimationFrame(micRaf);
+  micRaf = null;
+  micStream?.getTracks().forEach(t => t.stop());
+  micStream = null;
+  stage.classList.remove("blowing");
+  meter.hidden = true;
+  micBtn.disabled = false;
+  micBtn.textContent = "🎤 Blow them out for real";
+  micHint.textContent = "";
+}
+
+micBtn.addEventListener("click", enableMic);
+
+/* ══════════════════════════════════════════════════════════════
+   MEMORY GALLERY
+   ══════════════════════════════════════════════════════════════ */
+const galleryWrap = $("galleryWrap");
+const galleryEl = $("gallery");
+
+function buildGallery(){
+  const shots = (CARD.gallery || []).filter(g => g && g.src);
+  if (!shots.length) return;
+
+  $("galleryTitle").textContent = CARD.galleryTitle || "";
+
+  shots.forEach((shot, i) => {
+    const fig = document.createElement("button");
+    fig.className = "polaroid";
+    fig.type = "button";
+    fig.hidden = true;                 // stays hidden until the image proves it exists
+    fig.setAttribute("aria-label", shot.caption || `Photo ${i + 1}`);
+
+    const img = document.createElement("img");
+    img.loading = "lazy";
+    img.decoding = "async";
+    img.alt = shot.caption || "";
+
+    img.addEventListener("load", () => {
+      fig.hidden = false;
+      galleryWrap.hidden = false;
+    });
+    img.addEventListener("error", () => fig.remove());
+    img.src = shot.src;
+
+    const cap = document.createElement("span");
+    cap.className = "cap";
+    cap.textContent = shot.caption || "";
+
+    fig.append(img, cap);
+    fig.addEventListener("click", () => openLightbox(img.src, shot.caption || ""));
+    galleryEl.appendChild(fig);
+  });
+}
+buildGallery();
+
+/* --- Lightbox --- */
+const lightbox = $("lightbox");
+function openLightbox(src, caption){
+  $("lightboxImg").src = src;
+  $("lightboxImg").alt = caption;
+  $("lightboxCap").textContent = caption;
+  lightbox.classList.add("open");
+}
+function closeLightbox(){
+  lightbox.classList.remove("open");
+  $("lightboxImg").src = "";
+}
+lightbox.addEventListener("click", closeLightbox);
+$("lightboxClose").addEventListener("click", closeLightbox);
+
+/* ══════════════════════════════════════════════════════════════
+   KEEPSAKE — paint a shareable portrait image on a canvas.
+   Drawn by hand rather than screenshotting the DOM, so there's
+   no library to load and the output is a clean 1080×1350.
+   ══════════════════════════════════════════════════════════════ */
+function wrapText(c, text, maxWidth){
+  const words = String(text).split(/\s+/);
+  const lines = [];
+  let line = "";
+  for (const w of words){
+    const test = line ? line + " " + w : w;
+    if (c.measureText(test).width > maxWidth && line){ lines.push(line); line = w; }
+    else line = test;
+  }
+  if (line) lines.push(line);
+  return lines;
+}
+
+function drawKeepsake(){
+  const W = 1080, H = 1350;
+  const k = document.createElement("canvas");
+  k.width = W; k.height = H;
+  const c = k.getContext("2d");
+
+  // Background, echoing the page
+  const bg = c.createLinearGradient(0, 0, W, H);
+  bg.addColorStop(0, "#2d0f33");
+  bg.addColorStop(.55, "#1b0b1f");
+  bg.addColorStop(1, "#47143f");
+  c.fillStyle = bg;
+  c.fillRect(0, 0, W, H);
+
+  for (const [x, y, r, col] of [
+    [W*.12, H*.06, 520, "rgba(107,27,82,.75)"],
+    [W*.94, H*.14, 460, "rgba(58,21,96,.7)"],
+    [W*.5,  H*1.0, 560, "rgba(122,33,64,.6)"]
+  ]){
+    const g = c.createRadialGradient(x, y, 0, x, y, r);
+    g.addColorStop(0, col);
+    g.addColorStop(1, "rgba(0,0,0,0)");
+    c.fillStyle = g;
+    c.fillRect(0, 0, W, H);
+  }
+
+  // Scattered confetti
+  for (let i = 0; i < 150; i++){
+    c.save();
+    c.translate(Math.random() * W, Math.random() * H);
+    c.rotate(Math.random() * Math.PI);
+    c.globalAlpha = .16 + Math.random() * .5;
+    c.fillStyle = COLORS[(Math.random() * COLORS.length) | 0];
+    c.fillRect(0, 0, 9 + Math.random() * 9, 14 + Math.random() * 12);
+    c.restore();
+  }
+  c.globalAlpha = 1;
+
+  // Photo in a gradient ring
+  const cx = W / 2, cy = 400, R = 210;
+  const ring = c.createConicGradient
+    ? c.createConicGradient(Math.PI * 1.2, cx, cy)
+    : c.createLinearGradient(cx - R, cy - R, cx + R, cy + R);
+  ring.addColorStop(0, "#ffc94d");
+  ring.addColorStop(.3, "#ff5f9e");
+  ring.addColorStop(.6, "#b98cff");
+  ring.addColorStop(.85, "#4fe0c1");
+  ring.addColorStop(1, "#ffc94d");
+  c.fillStyle = ring;
+  c.beginPath(); c.arc(cx, cy, R + 12, 0, Math.PI * 2); c.fill();
+
+  c.save();
+  c.beginPath(); c.arc(cx, cy, R, 0, Math.PI * 2); c.clip();
+  if (photoReady && photo.naturalWidth){
+    // cover-crop, centred
+    const s = Math.max((R*2) / photo.naturalWidth, (R*2) / photo.naturalHeight);
+    const dw = photo.naturalWidth * s, dh = photo.naturalHeight * s;
+    c.drawImage(photo, cx - dw/2, cy - dh/2, dw, dh);
+  } else {
+    c.fillStyle = "#5b2247";
+    c.fillRect(cx - R, cy - R, R*2, R*2);
+    c.fillStyle = "#f6d9e4";
+    c.font = `800 190px ${"'Segoe UI', system-ui, sans-serif"}`;
+    c.textAlign = "center"; c.textBaseline = "middle";
+    c.fillText((NAME[0] || "🎂").toUpperCase(), cx, cy + 8);
+  }
+  c.restore();
+
+  // Headline
+  c.textAlign = "center";
+  c.textBaseline = "alphabetic";
+  const head = c.createLinearGradient(120, 0, W - 120, 0);
+  head.addColorStop(0, "#ffc94d");
+  head.addColorStop(.45, "#ff5f9e");
+  head.addColorStop(.8, "#b98cff");
+  head.addColorStop(1, "#4fe0c1");
+
+  c.fillStyle = "#f6d9e4";
+  c.font = `700 54px ${"'Segoe UI', system-ui, sans-serif"}`;
+  c.fillText("Happy Birthday", cx, 730);
+
+  c.fillStyle = head;
+  let nameSize = 108;
+  c.font = `800 ${nameSize}px ${"'Segoe UI', system-ui, sans-serif"}`;
+  while (c.measureText(NAME).width > W - 160 && nameSize > 44){
+    nameSize -= 6;
+    c.font = `800 ${nameSize}px ${"'Segoe UI', system-ui, sans-serif"}`;
+  }
+  c.fillText(NAME || "🎂", cx, 730 + nameSize + 18);
+
+  // A line or two of the message
+  let y = 730 + nameSize + 110;
+  c.fillStyle = "rgba(246,217,228,.92)";
+  c.font = `400 34px ${"'Segoe UI', system-ui, sans-serif"}`;
+  const body = [CARD.greeting, ...CARD.message].join("  ");
+  const lines = wrapText(c, body, W - 220).slice(0, 5);
+  for (const line of lines){
+    c.fillText(line, cx, y);
+    y += 52;
+  }
+
+  // Signature
+  c.fillStyle = "#ffc94d";
+  c.font = `italic 400 44px ${"Georgia, 'Segoe Script', serif"}`;
+  c.fillText(CARD.signature, cx, Math.min(y + 56, H - 90));
+
+  if (CARD.footer){
+    c.fillStyle = "rgba(255,255,255,.4)";
+    c.font = `400 24px ${"'Segoe UI', system-ui, sans-serif"}`;
+    c.fillText(CARD.footer, cx, H - 46);
+  }
+
+  return k;
+}
+
+$("saveBtn").addEventListener("click", async () => {
+  const btn = $("saveBtn");
+  btn.disabled = true;
+  try{
+    const k = drawKeepsake();
+    const blob = await new Promise((res, rej) =>
+      k.toBlob(b => b ? res(b) : rej(new Error("no blob")), "image/png"));
+
+    const filename = `happy-birthday-${(NAME || "you").toLowerCase().replace(/[^a-z0-9]+/g, "-")}.png`;
+    const file = new File([blob], filename, { type: "image/png" });
+
+    // Share sheet on phones, plain download everywhere else
+    if (navigator.canShare?.({ files: [file] })){
+      await navigator.share({ files: [file], title: document.title });
+    } else {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 4000);
+      toast("Saved! Check your downloads 💛");
+    }
+  }catch(err){
+    if (err?.name === "AbortError"){ /* user dismissed the share sheet */ }
+    else if (err?.name === "SecurityError")
+      toast("Saving needs the hosted version — the photo blocks it when opened straight off the disk.");
+    else
+      toast("Couldn't save the image on this browser, sorry!");
+  }finally{
+    btn.disabled = false;
+  }
+});
+
+/* ══════════════════════════════════════════════════════════════
+   SCENES
+   ══════════════════════════════════════════════════════════════ */
+const scene0 = $("scene0");
 const scene1 = $("scene1");
 const scene2 = $("scene2");
 
+function showCake(){
+  scene0.hidden = true;
+  scene1.hidden = false;
+  scene1.style.animation = "rise .6s cubic-bezier(.2,.85,.3,1) both";
+}
+
+let unwrapping = false;
+function unwrap(){
+  if (unwrapping) return;
+  unwrapping = true;
+  $("gift").classList.add("opening");
+  $("giftBtn").disabled = true;
+  buzz([20, 40, 30]);
+  popSound();
+  spawn(70, innerWidth / 2, innerHeight * .52, 2.4);
+  setTimeout(showCake, reduceMotion ? 120 : 800);
+}
+
+$("giftBtn").addEventListener("click", unwrap);
+$("skipIntro").addEventListener("click", (e) => { e.stopPropagation(); showCake(); });
+
 function openCard(){
+  stopMic();
   scene1.style.transition = "opacity .5s ease, transform .5s ease";
   scene1.style.opacity = "0";
   scene1.style.transform = "scale(.94)";
 
   setTimeout(() => {
-    scene1.style.display = "none";
+    scene1.hidden = true;
     scene2.classList.add("show");
     scene2.setAttribute("aria-hidden", "false");
+
     cannons();
+    setTimeout(() => launchFireworks(5), 900);
+
     if (CARD.music && musicOn) playMelody();
-    // Nudge the sound button if they haven't tried it yet
     if (CARD.music && !musicOn) soundBtn.animate(
       [{transform:"scale(1)"},{transform:"scale(1.25)"},{transform:"scale(1)"}],
       {duration:600, iterations:3}
@@ -893,16 +1686,16 @@ function openCard(){
   }, 480);
 }
 
-$("moreConfetti").addEventListener("click", cannons);
+$("moreConfetti").addEventListener("click", () => { cannons(); launchFireworks(3); buzz(20); });
 
 $("replay").addEventListener("click", () => {
   scene2.classList.remove("show");
   scene2.setAttribute("aria-hidden", "true");
-  scene1.style.display = "";
+  scene1.hidden = false;
   scene1.style.opacity = "1";
   scene1.style.transform = "none";
   buildCandles();
-  scene1.scrollIntoView({behavior: reduceMotion ? "auto" : "smooth", block:"center"});
+  scene1.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "center" });
 });
 
 buildCandles();

@@ -1,0 +1,33 @@
+WHAT GOES IN THIS FOLDER
+========================
+
+1) THE MAIN PHOTO  →  photo.jpg
+   The big circular portrait with the party hat.
+   Square-ish crop works best. ~800x800, under ~500 KB.
+
+2) THE MEMORY GALLERY  →  memory-1.jpg, memory-2.jpg, memory-3.jpg, memory-4.jpg
+   These become the tilted polaroids further down the card.
+   Square-ish again, ~800x800 each. Tap one and it opens full size.
+
+   Want more or fewer? Open index.html and edit the `gallery:` list in the
+   CARD block near the top of the <script>. Any photo listed there that
+   doesn't exist just quietly disappears, so you can leave extras in the
+   list without breaking anything. Add captions there too:
+
+       gallery: [
+         { src: "assets/memory-1.jpg", caption: "Brighton, 2023" },
+         { src: "assets/memory-2.jpg", caption: "the good pizza place" }
+       ]
+
+   If you add NO gallery photos, the whole section hides itself.
+
+
+FILE TYPES
+----------
+Use .jpg. If yours are .png or .heic, either convert them, or change the
+filenames in the CARD block to match what you actually have.
+
+Until photos are here, the card falls back to her first initial and simply
+skips the gallery — nothing ever looks broken.
+
+You can delete this text file once your photos are in place.
