@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Happy Birthday!</title>
+<meta name="description" content="A little birthday card, made with love.">
+
+<!-- Social preview (edit the URL after you know your Pages address) -->
+<meta property="og:title" content="Happy Birthday!">
+<meta property="og:description" content="Tap to open your card.">
+<meta property="og:type" content="website">
+
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎂</text></svg>">
+
+<style>
+/* ============================================================
+   PALETTE
+   ============================================================ */
+:root{
+  --ink:        #fff6f9;
+  --ink-soft:   #f6d9e4;
+  --ink-mute:   #d3a7bb;
+
+  --bg-0:       #1b0b1f;
+  --bg-1:       #2d0f33;
+  --bg-2:       #47143f;
+
+  --pink:       #ff5f9e;
+  --coral:      #ff7a6b;
+  --gold:       #ffc94d;
+  --mint:       #4fe0c1;
+  --lilac:      #b98cff;
+  --cream:      #fff3e2;
+
+  --card:       rgba(255,255,255,.06);
+  --card-line:  rgba(255,255,255,.16);
+
+  --display: "Segoe UI Rounded", ui-rounded, "SF Pro Rounded", "Nunito",
+             "Trebuchet MS", system-ui, sans-serif;
+  --body: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --hand: "Segoe Script", "Bradley Hand", "Brush Script MT", cursive;
+}
+
+*,*::before,*::after{ box-sizing:border-box; }
+
+html,body{ height:100%; }
+
+body{
+  margin:0;
+  font-family:var(--body);
+  color:var(--ink);
+  background:
+    radial-gradient(1100px 700px at 12% -10%, #6b1b52 0%, transparent 60%),
+    radial-gradient(900px 700px at 92% 8%,  #3a1560 0%, transparent 58%),
+    radial-gradient(900px 900px at 50% 115%, #7a2140 0%, transparent 62%),
+    linear-gradient(160deg, var(--bg-1), var(--bg-0) 55%, var(--bg-2));
+  background-attachment:fixed;
+  min-height:100svh;
+  overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* Soft drifting bokeh behind everything */
+body::before{
+  content:"";
+  position:fixed; inset:-20%;
+  background:
+    radial-gradient(closest-side, rgba(255,95,158,.20), transparent) 18% 30%/38vmin 38vmin no-repeat,
+    radial-gradient(closest-side, rgba(185,140,255,.18), transparent) 82% 22%/32vmin 32vmin no-repeat,
+    radial-gradient(closest-side, rgba(79,224,193,.13), transparent) 62% 82%/40vmin 40vmin no-repeat;
+  filter:blur(14px);
+  animation:drift 26s ease-in-out infinite alternate;
+  pointer-events:none;
+  z-index:0;
+}
+@keyframes drift{ to{ transform:translate3d(2.5%,-2.5%,0) scale(1.08); } }
+
+/* Confetti canvas sits above the scene but never blocks taps */
+#confetti{
+  position:fixed; inset:0;
+  width:100%; height:100%;
+  pointer-events:none;
+  z-index:60;
+}
+
+.wrap{
+  position:relative;
+  z-index:10;
+  max-width:760px;
+  margin:0 auto;
+  padding:clamp(20px,5vw,48px) clamp(18px,5vw,32px) 72px;
+  min-height:100svh;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  gap:clamp(20px,4vw,34px);
+}
+
+/* ============================================================
+   SCENE 1 — the cake
+   ============================================================ */
+.scene{ text-align:center; }
+
+.prompt{
+  font-family:var(--display);
+  font-size:clamp(1.05rem,3.6vw,1.5rem);
+  font-weight:700;
+  letter-spacing:.01em;
+  color:var(--ink-soft);
+  margin:0 0 6px;
+  text-wrap:balance;
+}
+.prompt-sub{
+  font-size:clamp(.8rem,2.6vw,.95rem);
+  color:var(--ink-mute);
+  margin:0 0 clamp(18px,4vw,30px);
+}
+.prompt-sub kbd{
+  font:inherit;
+  background:rgba(255,255,255,.1);
+  border:1px solid var(--card-line);
+  border-radius:6px;
+  padding:1px 6px;
+}
+
+.cake-stage{
+  display:inline-block;
+  position:relative;
+  padding:0 10px;
+}
+
+/* Warm glow cast by the lit candles — fades as they go out */
+.cake-stage::before{
+  content:"";
+  position:absolute;
+  left:50%; top:-14%;
+  width:min(58vw,320px); aspect-ratio:1;
+  transform:translateX(-50%);
+  background:radial-gradient(closest-side, rgba(255,201,77,.42), transparent 72%);
+  filter:blur(6px);
+  opacity:var(--glow,1);
+  transition:opacity .8s ease;
+  pointer-events:none;
+}
+
+.candles{
+  display:flex;
+  justify-content:center;
+  align-items:flex-end;
+  gap:clamp(10px,3.4vw,20px);
+  position:relative;
+  z-index:2;
+  margin-bottom:-2px;
+}
+
+.candle{
+  appearance:none;
+  background:none;
+  border:0;
+  padding:6px 4px 0;
+  cursor:pointer;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  -webkit-tap-highlight-color:transparent;
+}
+.candle:focus-visible{
+  outline:2px solid var(--gold);
+  outline-offset:4px;
+  border-radius:10px;
+}
+
+.flame{
+  width:13px; height:20px;
+  border-radius:50% 50% 46% 46% / 68% 68% 32% 32%;
+  background:
+    radial-gradient(ellipse at 50% 78%, #fff8d8 0%, var(--gold) 38%, var(--coral) 74%, rgba(255,90,60,0) 100%);
+  box-shadow:0 0 16px 5px rgba(255,180,60,.55);
+  transform-origin:50% 100%;
+  animation:flicker 1.05s ease-in-out infinite alternate;
+  margin-bottom:3px;
+}
+@keyframes flicker{
+  from{ transform:scale(1) rotate(-3deg); opacity:.92; }
+  to  { transform:scale(1.14,1.2) rotate(3deg); opacity:1; }
+}
+
+.wick{ width:2px; height:6px; background:#4a3a3a; border-radius:1px; }
+
+.stick{
+  width:11px;
+  height:clamp(38px,9vw,54px);
+  border-radius:4px 4px 2px 2px;
+  background:repeating-linear-gradient(-58deg,
+      var(--cream) 0 6px, var(--pink) 6px 12px);
+  box-shadow:inset -3px 0 0 rgba(0,0,0,.16), 0 2px 5px rgba(0,0,0,.3);
+}
+.candle:nth-child(even) .stick{
+  background:repeating-linear-gradient(-58deg,
+      var(--cream) 0 6px, var(--mint) 6px 12px);
+}
+.candle:nth-child(3n) .stick{
+  background:repeating-linear-gradient(-58deg,
+      var(--cream) 0 6px, var(--lilac) 6px 12px);
+}
+
+.candle:hover .flame{ transform:scale(1.2); }
+
+/* Extinguished */
+.candle.out .flame{
+  animation:none;
+  opacity:0;
+  transform:translateY(-14px) scale(.3);
+  box-shadow:none;
+  transition:all .45s ease;
+}
+.candle.out .wick{ background:#2b2222; }
+
+/* Smoke puff on blow-out */
+.smoke{
+  position:absolute;
+  width:9px; height:9px;
+  border-radius:50%;
+  background:rgba(230,220,225,.5);
+  filter:blur(3px);
+  pointer-events:none;
+  animation:puff 1.5s ease-out forwards;
+  z-index:3;
+}
+@keyframes puff{
+  0%  { opacity:.65; transform:translate(-50%,0) scale(.5); }
+  100%{ opacity:0;   transform:translate(-50%,-72px) scale(3.4); }
+}
+
+/* The cake itself */
+.cake{ position:relative; z-index:1; filter:drop-shadow(0 18px 26px rgba(0,0,0,.42)); }
+
+.icing{
+  width:clamp(200px,62vw,286px);
+  height:26px;
+  margin:0 auto;
+  border-radius:14px 14px 8px 8px;
+  background:linear-gradient(180deg,#fff6fa,#ffd9e8);
+  position:relative;
+}
+/* Drips */
+.icing::after{
+  content:"";
+  position:absolute;
+  left:0; right:0; top:20px;
+  height:16px;
+  background:
+    radial-gradient(closest-side, #ffd9e8 96%, transparent) repeat-x 0 0/26px 30px;
+}
+
+.layer{
+  width:clamp(190px,59vw,272px);
+  margin:0 auto;
+  height:clamp(46px,12vw,62px);
+  background:linear-gradient(180deg,#c96a8d,#a44a70);
+  position:relative;
+}
+.layer.two{
+  width:clamp(216px,68vw,308px);
+  background:linear-gradient(180deg,#b8577f,#8d3a5f);
+  border-radius:0 0 12px 12px;
+}
+/* Sprinkles */
+.layer::after{
+  content:"";
+  position:absolute; inset:0;
+  background:
+    radial-gradient(circle, var(--gold) 40%, transparent 42%) 18% 30%/34px 34px,
+    radial-gradient(circle, var(--mint) 40%, transparent 42%) 62% 62%/40px 40px,
+    radial-gradient(circle, var(--cream) 40%, transparent 42%) 84% 24%/46px 46px;
+  opacity:.75;
+}
+
+.plate{
+  width:clamp(250px,78vw,352px);
+  height:14px;
+  margin:0 auto;
+  border-radius:0 0 50% 50%/0 0 100% 100%;
+  background:linear-gradient(180deg,#e9dbe4,#a9909e);
+}
+
+.counter{
+  margin-top:18px;
+  font-size:.85rem;
+  color:var(--ink-mute);
+  letter-spacing:.06em;
+  text-transform:uppercase;
+  min-height:1.2em;
+}
+
+/* ============================================================
+   SCENE 2 — the card
+   ============================================================ */
+.card-scene{
+  display:none;
+  flex-direction:column;
+  gap:clamp(18px,4vw,28px);
+  align-items:center;
+  text-align:center;
+}
+.card-scene.show{ display:flex; }
+
+.reveal{
+  opacity:0;
+  transform:translateY(26px) scale(.97);
+  animation:rise .85s cubic-bezier(.2,.85,.3,1) forwards;
+}
+@keyframes rise{ to{ opacity:1; transform:none; } }
+
+.headline{
+  font-family:var(--display);
+  font-weight:800;
+  line-height:1.02;
+  letter-spacing:-.02em;
+  margin:0;
+  font-size:clamp(2.3rem,10.5vw,4.4rem);
+  text-wrap:balance;
+  background:linear-gradient(105deg,var(--gold),var(--pink) 42%,var(--lilac) 78%,var(--mint));
+  -webkit-background-clip:text;
+  background-clip:text;
+  color:transparent;
+  filter:drop-shadow(0 4px 16px rgba(255,95,158,.3));
+}
+.headline .name{ display:block; }
+
+.age-badge{
+  display:inline-flex;
+  align-items:baseline;
+  gap:.4em;
+  margin-top:2px;
+  padding:7px 16px;
+  border-radius:999px;
+  background:var(--card);
+  border:1px solid var(--card-line);
+  backdrop-filter:blur(8px);
+  font-family:var(--display);
+  font-weight:700;
+  font-size:clamp(.85rem,3vw,1rem);
+  color:var(--ink-soft);
+}
+.age-badge b{ font-size:1.35em; color:var(--gold); }
+
+/* --- Photo frame -------------------------------------------------
+   Drop a file at assets/photo.jpg and it appears here automatically.
+   If it's missing, a tasteful initial-monogram shows instead.
+------------------------------------------------------------------ */
+.photo-frame{
+  position:relative;
+  width:clamp(180px,52vw,236px);
+  aspect-ratio:1;
+  border-radius:50%;
+  padding:7px;
+  background:conic-gradient(from 210deg,
+      var(--gold), var(--pink), var(--lilac), var(--mint), var(--gold));
+  box-shadow:0 18px 40px rgba(0,0,0,.42);
+  animation:bob 5.5s ease-in-out infinite alternate;
+}
+@keyframes bob{ to{ transform:translateY(-9px) rotate(1.6deg); } }
+
+.photo-frame img,
+.photo-fallback{
+  width:100%; height:100%;
+  border-radius:50%;
+  object-fit:cover;
+  display:block;
+  background:linear-gradient(160deg,#5b2247,#33143a);
+}
+.photo-fallback{
+  display:none;
+  place-items:center;
+  font-family:var(--display);
+  font-weight:800;
+  font-size:clamp(3rem,14vw,4.6rem);
+  color:var(--ink-soft);
+}
+.photo-frame.no-photo img{ display:none; }
+.photo-frame.no-photo .photo-fallback{ display:grid; }
+
+/* Party hat, drawn in CSS so it needs no asset */
+.hat{
+  position:absolute;
+  top:-13%; left:50%;
+  transform:translateX(-58%) rotate(-19deg);
+  width:0; height:0;
+  border-left:30px solid transparent;
+  border-right:30px solid transparent;
+  border-bottom:62px solid var(--pink);
+  filter:drop-shadow(0 4px 8px rgba(0,0,0,.35));
+}
+.hat::after{
+  content:"";
+  position:absolute;
+  left:-13px; top:-79px;
+  width:16px; height:16px;
+  border-radius:50%;
+  background:var(--gold);
+  box-shadow:0 0 12px rgba(255,201,77,.7);
+}
+
+.caption{
+  margin:12px 0 0;
+  font-family:var(--hand);
+  font-size:clamp(1rem,3.4vw,1.2rem);
+  color:var(--ink-mute);
+}
+
+/* The message */
+.letter{
+  width:100%;
+  max-width:560px;
+  padding:clamp(22px,5.5vw,34px);
+  border-radius:22px;
+  background:var(--card);
+  border:1px solid var(--card-line);
+  backdrop-filter:blur(14px);
+  box-shadow:0 22px 60px rgba(0,0,0,.34);
+  text-align:left;
+}
+.letter p{
+  margin:0 0 1.05em;
+  font-size:clamp(1rem,3.4vw,1.12rem);
+  line-height:1.72;
+  color:var(--ink-soft);
+  text-wrap:pretty;
+}
+.letter p:last-of-type{ margin-bottom:0; }
+.letter .greeting{
+  font-family:var(--display);
+  font-weight:700;
+  font-size:clamp(1.15rem,4vw,1.35rem);
+  color:var(--ink);
+}
+.signature{
+  margin-top:22px;
+  padding-top:18px;
+  border-top:1px solid var(--card-line);
+  font-family:var(--hand);
+  font-size:clamp(1.25rem,4.6vw,1.6rem);
+  color:var(--gold);
+  text-align:right;
+}
+
+.actions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:12px;
+  justify-content:center;
+}
+.btn{
+  appearance:none;
+  font:inherit;
+  font-family:var(--display);
+  font-weight:700;
+  font-size:.95rem;
+  cursor:pointer;
+  padding:12px 22px;
+  border-radius:999px;
+  border:1px solid var(--card-line);
+  background:var(--card);
+  color:var(--ink);
+  backdrop-filter:blur(10px);
+  transition:transform .18s ease, background .18s ease, box-shadow .18s ease;
+  -webkit-tap-highlight-color:transparent;
+}
+.btn:hover{
+  transform:translateY(-2px);
+  background:rgba(255,255,255,.13);
+  box-shadow:0 10px 24px rgba(0,0,0,.3);
+}
+.btn:active{ transform:translateY(0); }
+.btn:focus-visible{ outline:2px solid var(--gold); outline-offset:3px; }
+.btn.primary{
+  background:linear-gradient(100deg,var(--pink),var(--coral));
+  border-color:transparent;
+  color:#2a0b1c;
+}
+
+.foot{
+  text-align:center;
+  font-size:.78rem;
+  color:rgba(255,255,255,.34);
+  letter-spacing:.04em;
+}
+
+/* Sound toggle, pinned out of the way */
+.sound{
+  position:fixed;
+  top:14px; right:14px;
+  z-index:70;
+  width:42px; height:42px;
+  display:grid; place-items:center;
+  font-size:1.05rem;
+  padding:0;
+  border-radius:50%;
+}
+
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{
+    animation-duration:.01ms !important;
+    animation-iteration-count:1 !important;
+    transition-duration:.01ms !important;
+  }
+  .reveal{ opacity:1; transform:none; }
+}
+</style>
+</head>
+<body>
+
+<canvas id="confetti" aria-hidden="true"></canvas>
+
+<button class="btn sound" id="soundBtn" type="button"
+        aria-pressed="false" title="Play music">🔈</button>
+
+<main class="wrap">
+
+  <!-- ---------- SCENE 1: blow out the candles ---------- -->
+  <section class="scene" id="scene1">
+    <h1 class="prompt" id="prompt1">Make a wish…</h1>
+    <p class="prompt-sub">Tap each candle to blow it out <span aria-hidden="true">·</span> or press <kbd>Space</kbd></p>
+
+    <div class="cake-stage" id="cakeStage">
+      <div class="candles" id="candles" role="group" aria-label="Birthday candles"></div>
+      <div class="cake">
+        <div class="icing"></div>
+        <div class="layer"></div>
+        <div class="layer two"></div>
+      </div>
+      <div class="plate"></div>
+    </div>
+
+    <p class="counter" id="counter" aria-live="polite"></p>
+  </section>
+
+  <!-- ---------- SCENE 2: the card ---------- -->
+  <section class="card-scene" id="scene2" aria-hidden="true">
+
+    <h1 class="headline reveal" style="animation-delay:.05s">
+      Happy Birthday<span class="name" id="nameOut">!</span>
+    </h1>
+
+    <div class="reveal" style="animation-delay:.2s">
+      <span class="age-badge" id="ageBadge" hidden></span>
+    </div>
+
+    <div class="reveal" style="animation-delay:.35s">
+      <figure style="margin:0">
+        <div class="photo-frame" id="photoFrame">
+          <span class="hat" aria-hidden="true"></span>
+          <img id="photo" alt="" >
+          <span class="photo-fallback" id="fallback" aria-hidden="true"></span>
+        </div>
+        <figcaption class="caption" id="caption"></figcaption>
+      </figure>
+    </div>
+
+    <div class="letter reveal" style="animation-delay:.5s">
+      <p class="greeting" id="greetingOut"></p>
+      <div id="bodyOut"></div>
+      <p class="signature" id="signOut"></p>
+    </div>
+
+    <div class="actions reveal" style="animation-delay:.65s">
+      <button class="btn primary" type="button" id="moreConfetti">More confetti 🎉</button>
+      <button class="btn" type="button" id="replay">Light the candles again</button>
+    </div>
+
+    <p class="foot reveal" style="animation-delay:.8s" id="footOut"></p>
+  </section>
+
+</main>
+
+<script>
+/* ══════════════════════════════════════════════════════════════
+   ✏️  EDIT ME — everything personal lives in this one object.
+   ══════════════════════════════════════════════════════════════ */
+const CARD = {
+  // Who it's for. Also overridable in the URL: index.html?to=Sophie
+  name: "Birthday Girl",
+
+  // Age shown in the little badge. Set to null to hide it entirely.
+  age: null,
+
+  // How many candles on the cake (1–12 looks best).
+  candles: 5,
+
+  // The photo. Drop your image at assets/photo.jpg (or change this path).
+  photo: "assets/photo.jpg",
+  photoCaption: "the birthday girl ✨",
+
+  // The message. First line is the greeting; each following string
+  // becomes its own paragraph.
+  greeting: "Happy birthday!",
+  message: [
+    "Another trip around the sun, and somehow you keep getting better at it.",
+    "Thank you for the laughs, the patience, and for being exactly who you are. The world is a warmer place with you in it.",
+    "Here's to a year full of good news, good food, and everything you've been quietly hoping for."
+  ],
+  signature: "— with love",
+
+  // Tiny line at the very bottom. Set to "" to hide.
+  footer: "made just for you 💛",
+
+  // Play a little Happy Birthday melody when the card opens?
+  // (Starts muted either way — browsers require a tap first.)
+  music: true
+};
+/* ══════════════════════════════════════════════════════════════
+   Below here is the machinery. You shouldn't need to touch it.
+   ══════════════════════════════════════════════════════════════ */
+
+const $ = (id) => document.getElementById(id);
+const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/* Let ?to=Name override the configured name, so one deploy can be
+   reused for more than one person. */
+const nameFromUrl = new URLSearchParams(location.search).get("to");
+const NAME = (nameFromUrl || CARD.name || "").trim();
+
+/* ---------- Populate the card ---------- */
+document.title = NAME ? `Happy Birthday, ${NAME}!` : "Happy Birthday!";
+$("nameOut").textContent = NAME ? `${NAME}!` : "!";
+$("prompt1").textContent = NAME ? `Make a wish, ${NAME}…` : "Make a wish…";
+
+if (CARD.age != null) {
+  const badge = $("ageBadge");
+  badge.hidden = false;
+  badge.innerHTML = `<b>${CARD.age}</b> looks good on you`;
+}
+
+$("greetingOut").textContent = CARD.greeting;
+$("bodyOut").innerHTML = CARD.message
+  .map(p => `<p>${p}</p>`)
+  .join("");
+$("signOut").textContent = CARD.signature;
+$("caption").textContent = CARD.photoCaption;
+$("footOut").textContent = CARD.footer;
+
+/* ---------- Photo, with a graceful fallback ---------- */
+const frame = $("photoFrame");
+const photo = $("photo");
+$("fallback").textContent = (NAME[0] || "🎂").toUpperCase();
+photo.alt = NAME ? `A photo of ${NAME}` : "Birthday photo";
+photo.addEventListener("error", () => frame.classList.add("no-photo"));
+photo.src = CARD.photo;
+
+/* ══════════════════════════════════════════════════════════════
+   Confetti
+   ══════════════════════════════════════════════════════════════ */
+const canvas = $("confetti");
+const ctx = canvas.getContext("2d");
+const COLORS = ["#ff5f9e","#ffc94d","#4fe0c1","#b98cff","#ff7a6b","#fff3e2"];
+let pieces = [];
+let raf = null;
+
+function sizeCanvas(){
+  const dpr = Math.min(devicePixelRatio || 1, 2);
+  canvas.width  = innerWidth  * dpr;
+  canvas.height = innerHeight * dpr;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+sizeCanvas();
+addEventListener("resize", sizeCanvas);
+
+function spawn(count, originX, originY, spread){
+  if (reduceMotion) count = Math.min(count, 24);
+  for (let i = 0; i < count; i++){
+    const angle = -Math.PI/2 + (Math.random() - .5) * spread;
+    const speed = 7 + Math.random() * 13;
+    pieces.push({
+      x: originX, y: originY,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed,
+      w: 6 + Math.random() * 7,
+      h: 9 + Math.random() * 9,
+      rot: Math.random() * Math.PI * 2,
+      spin: (Math.random() - .5) * .3,
+      color: COLORS[(Math.random() * COLORS.length) | 0],
+      ribbon: Math.random() < .3,
+      life: 0
+    });
+  }
+  start();
+}
+
+/* A burst from both bottom corners, the classic cannon look. */
+function cannons(){
+  spawn(90, innerWidth * .04, innerHeight * .96, 1.0);
+  spawn(90, innerWidth * .96, innerHeight * .96, 1.0);
+  setTimeout(() => spawn(70, innerWidth * .5, innerHeight * .55, 2.6), 220);
+}
+
+function tick(){
+  ctx.clearRect(0, 0, innerWidth, innerHeight);
+
+  for (let i = pieces.length - 1; i >= 0; i--){
+    const p = pieces[i];
+    p.life++;
+    p.vy += 0.24;              // gravity
+    p.vx *= 0.992;             // air drag
+    p.vy *= 0.992;
+    p.x += p.vx;
+    p.y += p.vy;
+    p.rot += p.spin;
+
+    if (p.y > innerHeight + 60 || p.life > 700){
+      pieces.splice(i, 1);
+      continue;
+    }
+
+    ctx.save();
+    ctx.translate(p.x, p.y);
+    ctx.rotate(p.rot);
+    ctx.fillStyle = p.color;
+    ctx.globalAlpha = p.life > 560 ? 1 - (p.life - 560) / 140 : 1;
+    if (p.ribbon){
+      // A curled streamer: squash the width as it spins
+      ctx.fillRect(-p.w/2, -p.h/2, p.w * Math.abs(Math.cos(p.rot)), p.h);
+    } else {
+      ctx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
+    }
+    ctx.restore();
+  }
+
+  if (pieces.length) raf = requestAnimationFrame(tick);
+  else { raf = null; ctx.clearRect(0, 0, innerWidth, innerHeight); }
+}
+function start(){ if (!raf) raf = requestAnimationFrame(tick); }
+
+/* ══════════════════════════════════════════════════════════════
+   Sound — a short Happy Birthday melody via WebAudio.
+   No audio files, so nothing extra to host.
+   ══════════════════════════════════════════════════════════════ */
+let audioCtx = null;
+let musicOn = false;
+const soundBtn = $("soundBtn");
+
+// Happy Birthday to You (public domain). [semitones from A4, beats]
+const MELODY = [
+  [-4,.75],[-4,.25],[-2,1],[-4,1],[ 1,1],[ 0,2],
+  [-4,.75],[-4,.25],[-2,1],[-4,1],[ 3,1],[ 1,2],
+  [-4,.75],[-4,.25],[ 8,1],[ 5,1],[ 1,1],[ 0,1],[-2,2],
+  [ 6,.75],[ 6,.25],[ 5,1],[ 1,1],[ 3,1],[ 1,2]
+];
+
+function note(semi, startAt, beats){
+  const freq = 440 * Math.pow(2, semi / 12);
+  const dur = beats * 0.42;
+
+  const osc  = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = "triangle";
+  osc.frequency.value = freq;
+
+  gain.gain.setValueAtTime(0.0001, startAt);
+  gain.gain.exponentialRampToValueAtTime(0.13, startAt + 0.02);
+  gain.gain.exponentialRampToValueAtTime(0.0001, startAt + dur * 0.92);
+
+  osc.connect(gain).connect(audioCtx.destination);
+  osc.start(startAt);
+  osc.stop(startAt + dur);
+  return dur;
+}
+
+function playMelody(){
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  audioCtx.resume();
+  let t = audioCtx.currentTime + 0.15;
+  for (const [semi, beats] of MELODY) t += note(semi, t, beats);
+}
+
+soundBtn.addEventListener("click", () => {
+  musicOn = !musicOn;
+  soundBtn.textContent = musicOn ? "🔊" : "🔈";
+  soundBtn.setAttribute("aria-pressed", String(musicOn));
+  soundBtn.title = musicOn ? "Mute" : "Play music";
+  if (musicOn) playMelody();
+  else if (audioCtx) audioCtx.suspend();
+});
+
+/* A soft puff sound when a candle goes out. */
+function blowSound(){
+  if (!musicOn || !audioCtx) return;
+  const noise = audioCtx.createBufferSource();
+  const len = audioCtx.sampleRate * 0.3;
+  const buf = audioCtx.createBuffer(1, len, audioCtx.sampleRate);
+  const data = buf.getChannelData(0);
+  for (let i = 0; i < len; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / len);
+  noise.buffer = buf;
+
+  const filter = audioCtx.createBiquadFilter();
+  filter.type = "bandpass";
+  filter.frequency.value = 900;
+
+  const g = audioCtx.createGain();
+  g.gain.setValueAtTime(0.25, audioCtx.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.3);
+
+  noise.connect(filter).connect(g).connect(audioCtx.destination);
+  noise.start();
+}
+
+/* ══════════════════════════════════════════════════════════════
+   Candles
+   ══════════════════════════════════════════════════════════════ */
+const candleBox = $("candles");
+const stage = $("cakeStage");
+const counter = $("counter");
+const TOTAL = Math.max(1, Math.min(12, CARD.candles | 0));
+let lit = TOTAL;
+
+function buildCandles(){
+  candleBox.innerHTML = "";
+  lit = TOTAL;
+  stage.style.setProperty("--glow", "1");
+  updateCounter();
+
+  for (let i = 0; i < TOTAL; i++){
+    const b = document.createElement("button");
+    b.className = "candle";
+    b.type = "button";
+    b.setAttribute("aria-label", `Blow out candle ${i + 1}`);
+    b.innerHTML = `<span class="flame"></span><span class="wick"></span><span class="stick"></span>`;
+    b.addEventListener("click", () => blowOut(b));
+    candleBox.appendChild(b);
+  }
+}
+
+function updateCounter(){
+  counter.textContent = lit > 0
+    ? `${lit} candle${lit === 1 ? "" : "s"} still lit`
+    : "";
+}
+
+function blowOut(btn){
+  if (btn.classList.contains("out")) return;
+  btn.classList.add("out");
+  btn.disabled = true;
+  lit--;
+
+  // Smoke, positioned over the candle that just went out
+  const r = btn.getBoundingClientRect();
+  const s = stage.getBoundingClientRect();
+  const puff = document.createElement("span");
+  puff.className = "smoke";
+  puff.style.left = (r.left - s.left + r.width / 2) + "px";
+  puff.style.top  = (r.top  - s.top) + "px";
+  stage.appendChild(puff);
+  setTimeout(() => puff.remove(), 1600);
+
+  blowSound();
+  stage.style.setProperty("--glow", String(lit / TOTAL));
+  updateCounter();
+
+  if (lit === 0) setTimeout(openCard, 620);
+}
+
+/* Space / Enter blows out the next lit candle. */
+addEventListener("keydown", (e) => {
+  if (e.code !== "Space" && e.code !== "Enter") return;
+  if (document.activeElement?.classList.contains("candle")) return; // let the button handle it
+  const next = candleBox.querySelector(".candle:not(.out)");
+  if (next){ e.preventDefault(); blowOut(next); }
+});
+
+/* ══════════════════════════════════════════════════════════════
+   Scene transition
+   ══════════════════════════════════════════════════════════════ */
+const scene1 = $("scene1");
+const scene2 = $("scene2");
+
+function openCard(){
+  scene1.style.transition = "opacity .5s ease, transform .5s ease";
+  scene1.style.opacity = "0";
+  scene1.style.transform = "scale(.94)";
+
+  setTimeout(() => {
+    scene1.style.display = "none";
+    scene2.classList.add("show");
+    scene2.setAttribute("aria-hidden", "false");
+    cannons();
+    if (CARD.music && musicOn) playMelody();
+    // Nudge the sound button if they haven't tried it yet
+    if (CARD.music && !musicOn) soundBtn.animate(
+      [{transform:"scale(1)"},{transform:"scale(1.25)"},{transform:"scale(1)"}],
+      {duration:600, iterations:3}
+    );
+  }, 480);
+}
+
+$("moreConfetti").addEventListener("click", cannons);
+
+$("replay").addEventListener("click", () => {
+  scene2.classList.remove("show");
+  scene2.setAttribute("aria-hidden", "true");
+  scene1.style.display = "";
+  scene1.style.opacity = "1";
+  scene1.style.transform = "none";
+  buildCandles();
+  scene1.scrollIntoView({behavior: reduceMotion ? "auto" : "smooth", block:"center"});
+});
+
+buildCandles();
+</script>
+</body>
+</html>

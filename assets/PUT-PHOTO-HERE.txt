@@ -1,0 +1,17 @@
+Drop the birthday girl's photo in this folder, named exactly:
+
+    photo.jpg
+
+That's it — the card picks it up automatically, no code changes needed.
+
+Tips:
+  - A square-ish crop looks best (the frame is a circle).
+  - Aim for roughly 800x800 px and under ~500 KB so it loads fast on phones.
+  - If your file is a PNG or HEIC, either rename/convert it to photo.jpg,
+    or open index.html and change the `photo:` line in the CARD block
+    near the top of the <script> to match your filename.
+
+Until a photo is here, the card gracefully shows her first initial instead,
+so nothing looks broken.
+
+You can delete this text file once the photo is in place.
